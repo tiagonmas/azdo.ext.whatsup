@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch localhost",
+            "type": "firefox",
+            "request": "launch",
+            "reAttach": true,
+            "url": "https://localhost:44300/index.html",
+            "webRoot": "${workspaceFolder}"
+            
+        }
+    ]
+}

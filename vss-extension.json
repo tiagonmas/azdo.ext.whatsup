@@ -1,0 +1,48 @@
+{
+ 	"manifestVersion": 1,
+ 	"id": "cse-follwing-feed",
+ 	"publisher": "TiagoAndradeeSilva",
+ 	"version": "1.0.34",
+ 	"name": "What's Up?",
+ 	"description": "Recent updates from the work items you follow",
+	"scopes": [ "vso.work"],
+ 	"categories": ["Azure Repos"],
+ 	"targets": [
+ 		{
+ 			"id": "Microsoft.VisualStudio.Services"
+ 		}
+ 	],
+ 	"contributions": [
+ 		{
+ 			"id": "cse-follwing-feed-hub",
+ 			"type": "ms.vss-web.hub",
+			"description": "Recent updates from the work items you follow",
+ 			"targets": [
+ 				"ms.vss-work-web.work-hub-group"
+ 			],
+ 			"properties": {
+ 				"name": "What's Up?",
+ 				"uri": "index.html"
+ 			}
+ 		}
+ 	],
+ 	"files": [
+ 		{
+ 			"path": "index.html",
+ 			"addressable": true
+		 },
+		 {
+			"path": "azdo.css",
+			"addressable": true
+		},
+		{
+            "path": "img",
+            "addressable": true
+        },
+ 		{
+ 			"path": "node_modules/vss-web-extension-sdk/lib",
+ 			"addressable": true,
+ 			"packagePath": "lib"
+ 		}
+ 	]
+ }

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+ <html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+	<script src="lib/VSS.SDK.min.js"></script>
+	<script src="feed.js"></script>
+	<link rel="stylesheet" type="text/css"href="azdo.css">
+	
+	<script type="text/javascript">
+
+		///Part of templating html 
+		function render(props) {
+ 			 return function(tok, i) { 
+				  return (i % 2) ? getDescendantProp(props,tok) : tok; 
+				};
+		}
+
+    	VSS.init({
+			explicitNotifyLoaded: false,
+			usePlatformScripts: true, 
+			usePlatformStyles: true
+		});
+		
+		
+    	VSS.ready(function() {
+			document.getElementById("name").innerText = VSS.getWebContext().user.name;		
+			
+    	});
+				
+		VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authentication/Services"], function (VSS_Service, TFS_Wit_WebApi,VSS_Auth_Service) {
+			var context = VSS.getWebContext();
+			var projectId = context.project.id;
+			var projectName = context.project.name;
+			var HostName = context.host.name;
+			var HostUri = context.host.uri;
+
+			VSS.getAccessToken().then(function(token){
+					return VSS_Auth_Service.authTokenManager.getAuthorizationHeader(token);
+				}).then(function(authHeader){					
+					
+					try
+					{
+						var witClient = VSS_Service.getCollectionClient(TFS_Wit_WebApi.WorkItemTrackingHttpClient);
+						
+						//Get all the workitems that we're following
+						var query = {query: "SELECT [System.Id], [System.WorkItemType], [System.Title], [System.ChangedDate] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') ORDER BY [System.ChangedDate] DESC" };
+						witClient.queryByWiql(query, projectId).then(
+							function(result) {  
+								try{
+									var queryByWiqlResult = JSON.parse(escapeUnicode(JSON.stringify(result)));
+								}catch(err){
+									console.log("error parsing queryByWiql:"+err+" json:"+JSON.stringify(result));	
+								}
+								
+								var idsArr=new Array(queryByWiqlResult.workItems.length);
+								for (var i=0;i<queryByWiqlResult.workItems.length;i++){
+									idsArr[i]=queryByWiqlResult.workItems[i].id
+								}								
+								return idsArr;
+							}).then(function(idsArr){
+								fetchContent(idsArr,authHeader,HostName,projectName).
+									then(function(comments){
+										
+										//Update UI with comments applying template
+										var itemTpl = $('script[data-template="commentTemplate"]').text().split(/\$\{(.+?)\}/g);
+										
+										$('#list-comment-items').append(comments.map(function (item) {
+											var myItemhtml=itemTpl.map(render(item)).join('');
+											return myItemhtml;
+										}));
+									
+										VSS.notifyLoadSucceeded();
+
+									},function(err) {
+										console.log("========ERROR: "+err);
+									});
+
+							});
+
+					}catch(err)
+					{console.log("error queryByWiql:"+err);	}
+				});
+						
+
+
+
+			// try
+			// {
+			// 	witClient.getWorkItems([1,2,3], ["System.Title"]).then( 
+			// 		function(result) { 
+			// 			console.log("===========getWorkItems=========");
+			// 			console.log("getWorkItems: "+JSON.stringify(result)); 
+			// 			console.log("===========DONE getWorkItems=========");
+			// 	}); 
+			// }
+			// catch(err)
+			// {console.log("error in getWorkItems:"+err);	}
+
+			// try
+			// {
+			// 	witClient.getRevision(1,1).then(
+			// 		function(result) {  
+			// 			console.log("===========getRevision=========");
+			// 			console.log("getRevision: "+JSON.stringify(result)); 
+			// 			console.log("===========DONE getRevision=========");
+			// 	});
+			// }
+			// catch(err)
+			// {console.log("error in getRevision:"+err);	}
+
+			// try
+			// {
+			// 	witClient.getUpdate(1,2).then(
+			// 		function(result) {  
+			// 			console.log("===========getUpdate=========");
+			// 			console.log("getUpdate: "+JSON.stringify(result)); 
+			// 	});
+			// }
+			// catch(err)
+			// {console.log("error in getUpdate:"+err);	}
+
+		});
+	</script>
+ </head>
+ <body>        
+	
+	<h1>Hello, <span id="name"></span></h1>
+	<br><span id="projectId"></span>
+	<h2>Here's the latest on the work items you're following:</h2>
+	<div class="discussion-messages-container">
+		<div class="discussion-messages">
+			<div class="comments-section">
+				<div>
+					<div id="list-comment-items"></div>
+					<!--START TEMPLATE-->
+					<script type="text/template" data-template="commentTemplate">
+						<div class="wit-comment-item">
+							<div class="comment-item-left">
+								<button class="avatar-button cursor-hover-card"><img class="avatar-button-image" src="${modifiedBy.imageUrl}" alt="Benjamin Moul?s"></button>
+							</div>
+							<div class="comment-item-right">
+								<div class="wit-comment-viewer">
+									<div class="comment-header"><div class="comment-header-left"><span class="user-display-name">${modifiedBy.displayName}</span>
+										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">commented on ${createdDate} regarding </span><span class="user-display-name"><a href="${url}">Nobel Foundation - Website on Azure</A></span></div></div>
+										<div class="comment-header-right"><div class="comment-toolbar" role="menubar">
+										<div class="comment-reaction-button comment-toolbar-reaction-button bolt-expandable-button inline-flex-row">
+											<button aria-expanded="false" aria-haspopup="true" aria-label="Add your reaction" aria-setsize="1" aria-posinset="1" class="icon-only bolt-button bolt-icon-button enabled subtle icon-only bolt-focus-treatment" data-focuszone="focuszone-3" data-is-focusable="true" role="menuitem" tabindex="0" type="button">
+											<span aria-hidden="true" class="left-icon flex-noshrink fabric-icon ms-Icon--AddReaction medium"></span></button>
+											</div>
+										</div></div>
+									</div>
+									<div class="comment-content" data-comment-id="${id}">
+										<div>${text}</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</script>
+					<!--END TEMPLATE-->
+				</div>
+				</div>
+			</div>
+		</div>
+	</div>
+				
+	<!-- <script type="text/javascript">VSS.notifyLoadSucceeded();</script> -->
+ </body>
+ </html>
