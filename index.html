@@ -6,11 +6,26 @@
 	<link rel="stylesheet" type="text/css"href="azdo.css">
 	
 	<script type="text/javascript">
+		
 
 		///Part of templating html 
 		function render(props) {
  			 return function(tok, i) { 
-				  return (i % 2) ? getDescendantProp(props,tok) : tok; 
+				//  return (i % 2) ? getDescendantProp(props,tok) : tok; 
+				   //return (i % 2) ? Object.byString(props,tok) : tok; 
+				   if (i % 2){
+					   //NEEDS TO BE FIXED. getDescendantProp is not solving for this nested type query because of the dot.
+					   return eval("props."+tok);
+						// if (tok=="fields[System.History][newValue]") {
+						// 	// var x=props.fields;
+						// 	// var y=x["System.History"];
+						// 	// //return props.fields[System.History][newValue]];
+						// 	return props.fields["System.History"].newValue;
+						// }else {
+						// 	return getDescendantProp(props,tok);
+						// }
+				   }
+				   else {return tok;}
 				};
 		}
 
@@ -57,14 +72,32 @@
 								}								
 								return idsArr;
 							}).then(function(idsArr){
+
+								// witClient.getWorkItems(idsArr, ["System.Title"]).then( 
+								// 	function(result) { 
+								// 		console.log("===========getWorkItems=========");
+								// 		console.log("getWorkItems: "+JSON.stringify(result)); 
+								// 		console.log("===========DONE getWorkItems=========");
+								// }); 
+								return idsArr;
+							}).then(function(idsArr){
 								fetchContent(idsArr,authHeader,HostName,projectName).
-									then(function(comments){
+									then(function(updates){
 										
 										//Update UI with comments applying template
-										var itemTpl = $('script[data-template="commentTemplate"]').text().split(/\$\{(.+?)\}/g);
+										var commentTpl = $('script[data-template="commentTemplate"]').text().split(/\$\{(.+?)\}/g);
+										var fieldsTpl = $('script[data-template="fieldsTemplate"]').text().split(/\$\{(.+?)\}/g);
 										
-										$('#list-comment-items').append(comments.map(function (item) {
-											var myItemhtml=itemTpl.map(render(item)).join('');
+										$('#list-comment-items').append(updates.map(function (item) {
+											var myItemhtml;
+											if (item.hasOwnProperty("fields")){
+												var myfields=item.fields;
+												if(myfields.hasOwnProperty("System.History")){
+													myItemhtml=commentTpl.map(render(item)).join('');
+												}else {
+													myItemhtml=fieldsTpl.map(render(item)).join('');
+												}
+											}
 											return myItemhtml;
 										}));
 									
@@ -121,7 +154,7 @@
 		});
 	</script>
  </head>
- <body>        
+ <body style="overflow: visible;">        
 	
 	<h1>Hello, <span id="name"></span></h1>
 	<br><span id="projectId"></span>
@@ -131,31 +164,56 @@
 			<div class="comments-section">
 				<div>
 					<div id="list-comment-items"></div>
-					<!--START TEMPLATE-->
+					<!--START COMMENT TEMPLATE-->
 					<script type="text/template" data-template="commentTemplate">
 						<div class="wit-comment-item">
 							<div class="comment-item-left">
-								<button class="avatar-button cursor-hover-card"><img class="avatar-button-image" src="${modifiedBy.imageUrl}" alt="Benjamin Moul?s"></button>
+								<button class="avatar-button cursor-hover-card"><img class="avatar-button-image" src="${revisedBy.imageUrl}" alt="${revisedBy.displayName}"></button>
 							</div>
 							<div class="comment-item-right">
 								<div class="wit-comment-viewer">
-									<div class="comment-header"><div class="comment-header-left"><span class="user-display-name">${modifiedBy.displayName}</span>
-										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">commented on ${createdDate} regarding </span><span class="user-display-name"><a href="${url}">Nobel Foundation - Website on Azure</A></span></div></div>
+									<div class="comment-header"><div class="comment-header-left"><span class="user-display-name">${revisedBy.displayName}</span>
+										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">commented on ${revisedDate} regarding </span><span class="user-display-name"><a href="${url}">Nobel Foundation - Website on Azure</A></span></div></div>
 										<div class="comment-header-right"><div class="comment-toolbar" role="menubar">
-										<div class="comment-reaction-button comment-toolbar-reaction-button bolt-expandable-button inline-flex-row">
+										<!-- <div class="comment-reaction-button comment-toolbar-reaction-button bolt-expandable-button inline-flex-row">
 											<button aria-expanded="false" aria-haspopup="true" aria-label="Add your reaction" aria-setsize="1" aria-posinset="1" class="icon-only bolt-button bolt-icon-button enabled subtle icon-only bolt-focus-treatment" data-focuszone="focuszone-3" data-is-focusable="true" role="menuitem" tabindex="0" type="button">
 											<span aria-hidden="true" class="left-icon flex-noshrink fabric-icon ms-Icon--AddReaction medium"></span></button>
-											</div>
+											</div> -->
 										</div></div>
 									</div>
 									<div class="comment-content" data-comment-id="${id}">
-										<div>${text}</div>
+										<div>History:${fields["System.History"].newValue}!</div>
 									</div>
 								</div>
 							</div>
 						</div>
 					</script>
-					<!--END TEMPLATE-->
+					<!--END COMMENT TEMPLATE-->
+					<!--START FIELDS TEMPLATE-->
+					<script type="text/template" data-template="fieldsTemplate">
+						<div class="wit-comment-item">
+							<div class="comment-item-left">
+								<button class="avatar-button cursor-hover-card"><img class="avatar-button-image" src="${revisedBy.imageUrl}" alt="${revisedBy.displayName}"></button>
+							</div>
+							<div class="comment-item-right">
+								<div class="wit-comment-viewer">
+									<div class="comment-header"><div class="comment-header-left"><span class="user-display-name">${revisedBy.displayName}</span>
+										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">commented on ${revisedDate} regarding </span><span class="user-display-name"><a href="${url}">Nobel Foundation - Website on Azure</A></span></div></div>
+										<div class="comment-header-right"><div class="comment-toolbar" role="menubar">
+										<!-- <div class="comment-reaction-button comment-toolbar-reaction-button bolt-expandable-button inline-flex-row">
+											<button aria-expanded="false" aria-haspopup="true" aria-label="Add your reaction" aria-setsize="1" aria-posinset="1" class="icon-only bolt-button bolt-icon-button enabled subtle icon-only bolt-focus-treatment" data-focuszone="focuszone-3" data-is-focusable="true" role="menuitem" tabindex="0" type="button"> 
+											<span aria-hidden="true" class="left-icon flex-noshrink fabric-icon ms-Icon--AddReaction medium"></span></button>
+											</div> -->
+										</div></div>
+									</div>
+									<div class="comment-content" data-comment-id="${id}">
+										<div>FIELDS</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</script>
+					<!--END FIELDS TEMPLATE-->
 				</div>
 				</div>
 			</div>

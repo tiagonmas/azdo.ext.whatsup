@@ -1,28 +1,28 @@
 
 var authHeader,hostName,projectName;
 
-//to dynamically access properties of an object
+//to dynamically access properties of an object, used in HTML Template.
 const getDescendantProp = (obj, path) => (
     path.split('.').reduce((acc, part) => acc && acc[part], obj)
 );
+
 
 function toTimestamp(strDate){
     var datum = Date.parse(strDate);
     return datum/1000;
 }
-//convert the json arrays returned from REST Api, into a "flat array" so can be sorted by date
-function FlattenCommentsArrAndSort(inArray){
-    var commentsTotal=0;
+//convert the json arrays returned from REST Api, into a "more flat array" so can be sorted by date
+function FlattenArrAndSort(inArray){
     var outArray=[];
 
     try{
         for(var i=0;i<inArray.length;i++)
         {
-            if(inArray[i].comments.length>0)
+            if(inArray[i].count>0)
             {
-                for(var j=0;j<inArray[i].comments.length;j++)
+                for(var j=0;j<inArray[i].count;j++)
                 {
-                    outArray.push(inArray[i].comments[j]);
+                    outArray.push(inArray[i].value[j]);
                     // var jsonData={createdDate:toTimestamp(inArray[i].comments[j].createdDate),comment:inArray[i].comments[j]};
                     // //var jsonData={createdDate:i*j+i-j,comment:inArray[i].comments[j]};
                     // outArray.push(jsonData);
@@ -33,7 +33,7 @@ function FlattenCommentsArrAndSort(inArray){
 
         //Sort by date (converting to timestamp before)
         outArray.sort(function(a, b) {
-            return toTimestamp(parseFloat(a.createdDate)) - toTimestamp(parseFloat(b.createdDate));
+            return toTimestamp(parseFloat(a.revisedDate)) - toTimestamp(parseFloat(b.revisedDate));
         });
     
     }
@@ -56,17 +56,17 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName)
 
             console.log("=========fetchContent");
 
-            //Fetch all comments from workitems with ids in the _idsArray
+            //Fetch all updates from workitems with ids in the _idsArray
             var promiseArr=new Array(_idsArr.length);
             for (var i=0;i<_idsArr.length;i++){
-                promiseArr[i]=get(getCommentsRestApiUrl(hostName,projectName,_idsArr[i]));
+                promiseArr[i]=get(getUpdateRestApiUrl(hostName,projectName,_idsArr[i]));
             }
             Promise.all(promiseArr).then(function(values) {
                 
                 console.log("Promise.all done");
-                var comments=FlattenCommentsArrAndSort(values);
-                console.log("Got comments:"+comments.length);
-                resolve(comments);
+                var updates=FlattenArrAndSort(values);
+                console.log("Got updates:"+updates.length);
+                resolve(updates);
             }).catch(error => reject(error));
                 
             // get(getCommentsRestApiUrl(hostName,projectName,1)).then(function(result){
