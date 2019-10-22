@@ -59,27 +59,26 @@
 						//Get all the workitems that we're following
 						var query = {query: "SELECT [System.Id], [System.WorkItemType], [System.Title], [System.ChangedDate] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') ORDER BY [System.ChangedDate] DESC" };
 						witClient.queryByWiql(query, projectId).then(
-							function(result) {  
-								try{
-									var queryByWiqlResult = JSON.parse(escapeUnicode(JSON.stringify(result)));
-								}catch(err){
-									console.log("error parsing queryByWiql:"+err+" json:"+JSON.stringify(result));	
-								}
-								
+							function(queryByWiqlResult) {  
 								var idsArr=new Array(queryByWiqlResult.workItems.length);
 								for (var i=0;i<queryByWiqlResult.workItems.length;i++){
 									idsArr[i]=queryByWiqlResult.workItems[i].id
 								}								
 								return idsArr;
 							}).then(function(idsArr){
-
-								// witClient.getWorkItems(idsArr, ["System.Title"]).then( 
-								// 	function(result) { 
-								// 		console.log("===========getWorkItems=========");
-								// 		console.log("getWorkItems: "+JSON.stringify(result)); 
-								// 		console.log("===========DONE getWorkItems=========");
-								// }); 
-								return idsArr;
+								return witClient.getWorkItems(idsArr, ["System.Title"])
+							}).then(function(result) { 
+										var itemsArr=[];
+										for (i in result)
+											{
+												try
+												{
+													var foo={id:result[i].id,title:result[i].fields["System.Title"],rev:result[i].rev,url:result[i].url};
+													itemsArr.push(foo);
+												}
+												catch(err){console.log(err);}
+											}
+											return itemsArr;
 							}).then(function(idsArr){
 								fetchContent(idsArr,authHeader,HostName,projectName).
 									then(function(updates){
@@ -182,7 +181,7 @@
 										</div></div>
 									</div>
 									<div class="comment-content" data-comment-id="${id}">
-										<div>History:${fields["System.History"].newValue}!</div>
+										<div>${fields["System.History"].newValue}!</div>
 									</div>
 								</div>
 							</div>
@@ -198,7 +197,7 @@
 							<div class="comment-item-right">
 								<div class="wit-comment-viewer">
 									<div class="comment-header"><div class="comment-header-left"><span class="user-display-name">${revisedBy.displayName}</span>
-										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">commented on ${revisedDate} regarding </span><span class="user-display-name"><a href="${url}">Nobel Foundation - Website on Azure</A></span></div></div>
+										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">changed on ${revisedDate} regarding </span><span class="user-display-name"><a href="${url}">Nobel Foundation - Website on Azure</A></span></div></div>
 										<div class="comment-header-right"><div class="comment-toolbar" role="menubar">
 										<!-- <div class="comment-reaction-button comment-toolbar-reaction-button bolt-expandable-button inline-flex-row">
 											<button aria-expanded="false" aria-haspopup="true" aria-label="Add your reaction" aria-setsize="1" aria-posinset="1" class="icon-only bolt-button bolt-icon-button enabled subtle icon-only bolt-focus-treatment" data-focuszone="focuszone-3" data-is-focusable="true" role="menuitem" tabindex="0" type="button"> 

@@ -59,7 +59,7 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName)
             //Fetch all updates from workitems with ids in the _idsArray
             var promiseArr=new Array(_idsArr.length);
             for (var i=0;i<_idsArr.length;i++){
-                promiseArr[i]=get(getUpdateRestApiUrl(hostName,projectName,_idsArr[i]));
+                promiseArr[i]=get(getUpdateRestApiUrl(hostName,projectName,_idsArr[i].id));
             }
             Promise.all(promiseArr).then(function(values) {
                 
