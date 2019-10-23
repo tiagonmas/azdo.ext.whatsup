@@ -48,7 +48,12 @@ function copyProperties(idsArr,updates)
             Object.defineProperty(item, 'title', { value: idItem.fields["System.Title"] } );  
             Object.defineProperty(item, 'workItemURL', { value: getWorkItemUrl(hostName,projectName,item.workItemId) } );  
             Object.defineProperty(item, 'numRevisions', { value: idItem.rev } );  
-            Object.defineProperty(item, 'timestamp', { value: toTimestamp(item.fields["System.ChangedDate"].newValue) } ); 
+            if(item.hasOwnProperty("fields")){
+                Object.defineProperty(item, 'timestamp', { value: toTimestamp(item.fields["System.ChangedDate"].newValue) } ); 
+            }
+            else {
+                Object.defineProperty(item, 'timestamp', { value: toTimestamp(item.revisedDate) } ); 
+            }
             Object.defineProperty(item, 'fieldsChangedHTML', { value: createfieldsChangedHTML(item) } ); 
         }
     });

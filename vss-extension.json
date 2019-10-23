@@ -2,7 +2,7 @@
  	"manifestVersion": 1,
  	"id": "cse-follwing-feed",
  	"publisher": "TiagoAndradeeSilva",
- 	"version": "1.0.34",
+ 	"version": "1.0.35",
  	"name": "What's Up?",
  	"description": "Recent updates from the work items you follow",
 	"scopes": [ "vso.work"],

@@ -1,12 +1,20 @@
 <!DOCTYPE html>
  <html xmlns="http://www.w3.org/1999/xhtml">
  <head>
+	<script type="text/javascript">
+		var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){t[e]=function(){var n=arguments;t.queue.push(function(){t[e].apply(t,n)})}}var t={config:e};t.initialize=!0;var i=document,a=window;setTimeout(function(){var n=i.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js",i.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{t.cookie=i.cookie}catch(e){}t.queue=[],t.version=2;for(var r=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];r.length;)n("track"+r.pop());n("startTrackPage"),n("stopTrackPage");var s="Track"+r[0];if(n("start"+s),n("stop"+s),n("setAuthenticatedUserContext"),n("clearAuthenticatedUserContext"),n("flush"),!(!0===e.disableExceptionTracking||e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!0===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){n("_"+(r="onerror"));var o=a[r];a[r]=function(e,n,i,a,s){var c=o&&o(e,n,i,a,s);return!0!==c&&t["_"+r]({message:e,url:n,lineNumber:i,columnNumber:a,error:s}),c},e.autoExceptionInstrumented=!0}return t}(
+		{
+			instrumentationKey:"194d3246-dd2b-4030-b053-80ea7b3f8c1e"
+		}
+		);window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length&&aisdk.trackPageView({});
+		</script>
 	<script src="lib/VSS.SDK.min.js"></script>
 	<script src="feed.js"></script>
 	<link rel="stylesheet" type="text/css"href="azdo.css">
 	
 	<script type="text/javascript">
 		
+		appInsights.startTrackPage("Page");
 
 		///Part of templating html 
 		function render(props) {
@@ -61,6 +69,21 @@
 						witClient.queryByWiql(query, projectId).then(
 							function(queryByWiqlResult) {  
 								var idsArr=new Array(queryByWiqlResult.workItems.length);
+								if (queryByWiqlResult.workItems.length==0)
+								{
+									appInsights.trackEvent({name: "noContent"});
+									document.getElementById("nocontent").style.visibility="visible" ;
+									document.getElementById("headbox").style.visibility="hidden" ;
+									
+									//Improve: break out of promise chain. No need to continue moving forward 
+								}
+								else {
+									appInsights.trackEvent({name: "Content"});
+									appInsights.trackMetric("FollowingItems",queryByWiqlResult.workItems.length );
+									document.getElementById("nocontent").style.display="none" ;
+									document.getElementById("headbox").style.visibility="visible" ;
+								}
+
 								for (var i=0;i<queryByWiqlResult.workItems.length;i++){
 									idsArr[i]=queryByWiqlResult.workItems[i].id
 								}								
@@ -89,7 +112,7 @@
 										}));
 									
 										VSS.notifyLoadSucceeded();
-
+										appInsights.stopTrackPage("Page");
 									},function(err) {
 										console.log("========ERROR: "+err);
 									});
@@ -124,23 +147,27 @@
 				case 'comments':
 					changeDisplay("showHideFields","none");
 					changeDisplay("showHideSpecialField","flex");
+					appInsights.trackEvent({name:"FilterComments"});
 					break;
 				case 'somefields':
 					changeDisplay("showHideFields","block");
 					changeDisplay("showHideSpecialField","none");	
+					appInsights.trackEvent({name:"FilterSomeFields"});
 					break;
 				case 'all':
 					changeDisplay("showHideFields","block");
 					removeStyle("showHideSpecialField");
+					appInsights.trackEvent({name:"FilterAll"});
 					break;
 			}
 
 		}
 	</script>
  </head>
- <body style="overflow: visible;">        
-	<div id="headbox">
-		<div id="leftbox"><h2>Here's the latest on the work items you're following:</h2></div>
+ <body style="overflow: visible;">    
+<div id="maincontent">
+	<div id="headbox" style="visibility: hidden;">
+		<div id="leftbox"><h2>Showing the latest updates on the work items you're following</h2></div>
 		<div id="rightbox">
 			<br>
 			<select onchange="updateVisibility(this.value)" style="align-content:flex-end ;">
@@ -150,7 +177,14 @@
 			</select>
 		</div>
 	</div>
-
+	<div id="nocontent" style="visibility: hidden;">
+		<h2>Welcome!</h2>
+		<br>Here you'll see a feed of the changes to the work items you're following. Since you're not currently following anything, there is nothing to show for now.
+		<br>Click the "Follow" button on your favorite work items and come back to this page to see their updates
+		<p>Sample image:</p>
+		<br><img src="https://docs.microsoft.com/en-us/azure/devops/boards/work-items/_img/follow-work/follow-work-item.png?view=azure-devops"/>
+		<p>More information: <A href="https://docs.microsoft.com/en-us/azure/devops/boards/work-items/follow-work-items?view=azure-devops">Tutorial: Follow a user story, bug, issue, or other work item or pull request</A>
+	</div>
 	<div class="discussion-messages-container">
 		<div class="discussion-messages">
 			<div class="comments-section">
@@ -190,7 +224,7 @@
 							<div class="comment-item-right">
 								<div class="wit-comment-viewer">
 									<div class="comment-header"><div class="comment-header-left"><span class="user-display-name">${revisedBy.displayName}</span>
-										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">fields changed on ${fields["System.ChangedDate"].newValue} regarding </span><span class="user-display-name"><a href="${workItemURL}"  target="_top">${title}</A></span></div></div>
+										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">changed fields on ${fields["System.ChangedDate"].newValue} regarding </span><span class="user-display-name"><a href="${workItemURL}"  target="_top">${title}</A></span></div></div>
 										<div class="comment-header-right"><div class="comment-toolbar" role="menubar">
 										<!-- <div class="comment-reaction-button comment-toolbar-reaction-button bolt-expandable-button inline-flex-row">
 											<button aria-expanded="false" aria-haspopup="true" aria-label="Add your reaction" aria-setsize="1" aria-posinset="1" class="icon-only bolt-button bolt-icon-button enabled subtle icon-only bolt-focus-treatment" data-focuszone="focuszone-3" data-is-focusable="true" role="menuitem" tabindex="0" type="button"> 
@@ -211,7 +245,7 @@
 			</div>
 		</div>
 	</div>
-				
+</div>
 	<!-- <script type="text/javascript">VSS.notifyLoadSucceeded();</script> -->
  </body>
  </html>

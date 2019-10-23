@@ -2,11 +2,14 @@
 body {
     background-color: rgb(255, 255, 255);
     color: white;
-    margin: 10px;
+	margin: 10px;
     border-left: thick double #ffffff;			
     font-family: "Segoe UI VSS (Regular)","-apple-system",BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 
+#maincontent{
+	padding-left: 1.5em;
+}
 
 
 /* CSS file: WorkItemTracking/Controls/WorkItemForm/Comments/CommentEditor */
@@ -90,3 +93,8 @@ body {
 	vertical-align: bottom; 
 
 } 
+
+#nocontent
+{
+	font-size: 16px;
+}
