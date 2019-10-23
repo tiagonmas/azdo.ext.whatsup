@@ -1,5 +1,5 @@
-
 var authHeader,hostName,projectName;
+const SpecialFields="System.AuthorizedDate;System.RevisedDate;System.ChangedDate;System.Rev;System.ChangedBy"
 
 //to dynamically access properties of an object, used in HTML Template.
 const getDescendantProp = (obj, path) => (
@@ -12,7 +12,7 @@ function toTimestamp(strDate){
     return datum/1000;
 }
 //convert the json arrays returned from REST Api, into a "more flat array" so can be sorted by date
-function FlattenArrAndSort(inArray){
+function FlattenArr(inArray){
     var outArray=[];
 
     try{
@@ -29,13 +29,7 @@ function FlattenArrAndSort(inArray){
                 }    
             }
     
-        }
-
-        //Sort by date (converting to timestamp before)
-        outArray.sort(function(a, b) {
-            return toTimestamp(parseFloat(a.revisedDate)) - toTimestamp(parseFloat(b.revisedDate));
-        });
-    
+        }    
     }
     catch(Err){
         console.error("Error in FlattenCommentsArr: "+ Err);
@@ -43,6 +37,78 @@ function FlattenArrAndSort(inArray){
     return outArray;
 }
 
+//Copy information from idsArr to the updates arrays, so each item has "complete info" 
+function copyProperties(idsArr,updates)
+{
+    updates.forEach(function(item) {
+        var idItem=idsArr.find(x => x.id === item.workItemId);
+        if (idItem==null) 
+            {console.log("Error id not found:" + item.id);}
+        else {
+            Object.defineProperty(item, 'title', { value: idItem.fields["System.Title"] } );  
+            Object.defineProperty(item, 'workItemURL', { value: getWorkItemUrl(hostName,projectName,item.workItemId) } );  
+            Object.defineProperty(item, 'numRevisions', { value: idItem.rev } );  
+            Object.defineProperty(item, 'timestamp', { value: toTimestamp(item.fields["System.ChangedDate"].newValue) } ); 
+            Object.defineProperty(item, 'fieldsChangedHTML', { value: createfieldsChangedHTML(item) } ); 
+        }
+    });
+    
+}
+
+//https://stackoverflow.com/questions/208016/how-to-list-the-properties-of-a-javascript-object
+//List all properties of an object
+var getKeys = function(obj){
+    var keys = [];
+    for(var key in obj){
+       keys.push(key);
+    }
+    return keys;
+ }
+
+//Create the HTML that summarizes the changes made to a workitem
+function createfieldsChangedHTML(item)
+{   
+    var html=[];
+    var fields=item.fields;
+    html.push("<div class=\"divTable\"><div class=\"divTableBody\">");
+    html.push("<div class=\"divTableHeading\"><div class=\"divTableCell\">Field</div><div class=\"divTableCell\">Old value</div><div class=\"divTableCell\">New value</div></div>");
+    var fields=getKeys(item.fields);
+    fields.forEach(function(field)
+    {
+            if (SpecialFields.includes(field))
+            {
+                html.push("<div class=\"divTableRow showHideSpecialField\">")   
+            }
+            else 
+            {
+                html.push("<div class=\"divTableRow\">")    
+            }
+            
+            html.push("<div class=\"divTableCell\">"+field+"</div>");
+            if(item.fields[field].hasOwnProperty("oldValue"))
+                {html.push("<div class=\"divTableCell\"><del>"+item.fields[field].oldValue+"</del></div>");}
+            else {html.push("<div class=\"divTableCell\">&nbsp;</div>");}
+            
+            if(item.fields[field].hasOwnProperty("newValue"))
+                {html.push("<div class=\"divTableCell\">"+item.fields[field].newValue+"</div>");}
+            else {html.push("<div class=\"divTableCell\">&nbsp;</div>");}
+            html.push("</div>");
+     });
+    html.push("</div></div>");
+    return html.join("\n");
+}
+
+function compare( a, b ) {
+    if ( a.timestamp < b.timestamp ){
+      return 1;
+    }
+    if ( a.timestamp > b.timestamp ){
+      return -1;
+    }
+    return 0;
+  }
+
+//Call Rest API's based on array of ID's 
 function fetchContent(_idsArr,_authHeader,_hostName,_projectName)
 {
     return new Promise(function(resolve, reject) {
@@ -64,24 +130,14 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName)
             Promise.all(promiseArr).then(function(values) {
                 
                 console.log("Promise.all done");
-                var updates=FlattenArrAndSort(values);
+                var updates=FlattenArr(values);
                 console.log("Got updates:"+updates.length);
+                copyProperties(_idsArr,updates);
+                //Sort by date (timestamp)
+                //updates.sort((a,b) => (a.timestamp > b.timestamp) ? 0 : ((b.timestamp > a.timestamp) ? -1 : 1));
+                updates.sort(compare);
                 resolve(updates);
             }).catch(error => reject(error));
-                
-            // get(getCommentsRestApiUrl(hostName,projectName,1)).then(function(result){
-            //     console.log("I got getCommentsRestApiUrl:"+result);
-            //     console.log("getCommentsRestApiUrl #items:"+result.count);
-            // }, function (err) 
-            //     {console.log("Err1:"+err);}
-            // ).then(
-            //     get(getUpdateRestApiUrl(hostName,projectName,1)).then(function(result){
-            //         console.log("I got getUpdateRestApiUrl:"+result);
-            //         console.log("getUpdateRestApiUrl #items:"+result.count);
-            //     },function (err) 
-            //     {console.log("Err2:"+err);})  
-            // )
-
         }
         catch(Err){
             console.error("Error:"+Err);
@@ -142,6 +198,11 @@ function getCommentsRestApiUrl(organization, project, id)
     return "https://"+organization+".visualstudio.com/"+project+"/_apis/wit/workItems/"+id+"/comments";
 }
 
+function getWorkItemUrl(organization, project, id)
+{
+    //https://dev.azure.com/TASAlpineSkiHouse/MyFirstProject/_workitems/edit/1/
+    return "https://"+organization+".visualstudio.com/"+project+"/_workItems/edit/"+id;
+}
 function getCommentsHTML(comments){
     html=[];
     comments.forEach(function(item,index){

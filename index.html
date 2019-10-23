@@ -37,7 +37,7 @@
 		
 		
     	VSS.ready(function() {
-			document.getElementById("name").innerText = VSS.getWebContext().user.name;		
+			//document.getElementById("name").innerText = VSS.getWebContext().user.name;		
 			
     	});
 				
@@ -67,20 +67,8 @@
 								return idsArr;
 							}).then(function(idsArr){
 								return witClient.getWorkItems(idsArr, ["System.Title"])
-							}).then(function(result) { 
-										var itemsArr=[];
-										for (i in result)
-											{
-												try
-												{
-													var foo={id:result[i].id,title:result[i].fields["System.Title"],rev:result[i].rev,url:result[i].url};
-													itemsArr.push(foo);
-												}
-												catch(err){console.log(err);}
-											}
-											return itemsArr;
-							}).then(function(idsArr){
-								fetchContent(idsArr,authHeader,HostName,projectName).
+							}).then(function(itemsArr){
+								fetchContent(itemsArr,authHeader,HostName,projectName).
 									then(function(updates){
 										
 										//Update UI with comments applying template
@@ -112,52 +100,57 @@
 					{console.log("error queryByWiql:"+err);	}
 				});
 						
-
-
-
-			// try
-			// {
 			// 	witClient.getWorkItems([1,2,3], ["System.Title"]).then( 
-			// 		function(result) { 
-			// 			console.log("===========getWorkItems=========");
-			// 			console.log("getWorkItems: "+JSON.stringify(result)); 
-			// 			console.log("===========DONE getWorkItems=========");
-			// 	}); 
-			// }
-			// catch(err)
-			// {console.log("error in getWorkItems:"+err);	}
-
-			// try
-			// {
 			// 	witClient.getRevision(1,1).then(
-			// 		function(result) {  
-			// 			console.log("===========getRevision=========");
-			// 			console.log("getRevision: "+JSON.stringify(result)); 
-			// 			console.log("===========DONE getRevision=========");
-			// 	});
-			// }
-			// catch(err)
-			// {console.log("error in getRevision:"+err);	}
-
-			// try
-			// {
 			// 	witClient.getUpdate(1,2).then(
-			// 		function(result) {  
-			// 			console.log("===========getUpdate=========");
-			// 			console.log("getUpdate: "+JSON.stringify(result)); 
-			// 	});
-			// }
-			// catch(err)
-			// {console.log("error in getUpdate:"+err);	}
 
 		});
+
+		function changeDisplay(elementClass,newValue){
+			
+				Array.prototype.forEach.call(document.getElementsByClassName(elementClass),element => {	
+						element.style.display = newValue;	
+					});
+		}
+		function removeStyle(elementClass){
+			
+			Array.prototype.forEach.call(document.getElementsByClassName(elementClass),element => {	
+					element.removeAttribute("style")
+				});
+		}	
+		function updateVisibility(element){
+			switch(element)
+			{
+				case 'comments':
+					changeDisplay("showHideFields","none");
+					changeDisplay("showHideSpecialField","flex");
+					break;
+				case 'somefields':
+					changeDisplay("showHideFields","block");
+					changeDisplay("showHideSpecialField","none");	
+					break;
+				case 'all':
+					changeDisplay("showHideFields","block");
+					removeStyle("showHideSpecialField");
+					break;
+			}
+
+		}
 	</script>
  </head>
  <body style="overflow: visible;">        
-	
-	<h1>Hello, <span id="name"></span></h1>
-	<br><span id="projectId"></span>
-	<h2>Here's the latest on the work items you're following:</h2>
+	<div id="headbox">
+		<div id="leftbox"><h2>Here's the latest on the work items you're following:</h2></div>
+		<div id="rightbox">
+			<br>
+			<select onchange="updateVisibility(this.value)" style="align-content:flex-end ;">
+				<option value="all">Show all field changes and comments</option>
+				<option value="comments">Show only comments and no field changes</option>
+				<option value="somefields">Show only most important fields</option>
+			</select>
+		</div>
+	</div>
+
 	<div class="discussion-messages-container">
 		<div class="discussion-messages">
 			<div class="comments-section">
@@ -172,7 +165,7 @@
 							<div class="comment-item-right">
 								<div class="wit-comment-viewer">
 									<div class="comment-header"><div class="comment-header-left"><span class="user-display-name">${revisedBy.displayName}</span>
-										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">commented on ${revisedDate} regarding </span><span class="user-display-name"><a href="${url}">Nobel Foundation - Website on Azure</A></span></div></div>
+										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">commented on ${fields["System.ChangedDate"].newValue} regarding </span><span class="user-display-name"><a href="${workItemURL}" target="_top">${title}</A></span></div></div>
 										<div class="comment-header-right"><div class="comment-toolbar" role="menubar">
 										<!-- <div class="comment-reaction-button comment-toolbar-reaction-button bolt-expandable-button inline-flex-row">
 											<button aria-expanded="false" aria-haspopup="true" aria-label="Add your reaction" aria-setsize="1" aria-posinset="1" class="icon-only bolt-button bolt-icon-button enabled subtle icon-only bolt-focus-treatment" data-focuszone="focuszone-3" data-is-focusable="true" role="menuitem" tabindex="0" type="button">
@@ -181,7 +174,7 @@
 										</div></div>
 									</div>
 									<div class="comment-content" data-comment-id="${id}">
-										<div>${fields["System.History"].newValue}!</div>
+										<div>${fields["System.History"].newValue}</div>
 									</div>
 								</div>
 							</div>
@@ -190,14 +183,14 @@
 					<!--END COMMENT TEMPLATE-->
 					<!--START FIELDS TEMPLATE-->
 					<script type="text/template" data-template="fieldsTemplate">
-						<div class="wit-comment-item">
+						<div class="wit-comment-item showHideFields">
 							<div class="comment-item-left">
 								<button class="avatar-button cursor-hover-card"><img class="avatar-button-image" src="${revisedBy.imageUrl}" alt="${revisedBy.displayName}"></button>
 							</div>
 							<div class="comment-item-right">
 								<div class="wit-comment-viewer">
 									<div class="comment-header"><div class="comment-header-left"><span class="user-display-name">${revisedBy.displayName}</span>
-										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">changed on ${revisedDate} regarding </span><span class="user-display-name"><a href="${url}">Nobel Foundation - Website on Azure</A></span></div></div>
+										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">fields changed on ${fields["System.ChangedDate"].newValue} regarding </span><span class="user-display-name"><a href="${workItemURL}"  target="_top">${title}</A></span></div></div>
 										<div class="comment-header-right"><div class="comment-toolbar" role="menubar">
 										<!-- <div class="comment-reaction-button comment-toolbar-reaction-button bolt-expandable-button inline-flex-row">
 											<button aria-expanded="false" aria-haspopup="true" aria-label="Add your reaction" aria-setsize="1" aria-posinset="1" class="icon-only bolt-button bolt-icon-button enabled subtle icon-only bolt-focus-treatment" data-focuszone="focuszone-3" data-is-focusable="true" role="menuitem" tabindex="0" type="button"> 
@@ -206,7 +199,7 @@
 										</div></div>
 									</div>
 									<div class="comment-content" data-comment-id="${id}">
-										<div>FIELDS</div>
+										<div>${fieldsChangedHTML}</div>
 									</div>
 								</div>
 							</div>
