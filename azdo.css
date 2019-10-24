@@ -9,6 +9,7 @@ body {
 
 #maincontent{
 	padding-left: 1.5em;
+	padding-right: 1.5em;
 }
 
 
@@ -97,4 +98,14 @@ body {
 #nocontent
 {
 	font-size: 16px;
+}
+
+.discussion-messages-container{
+	overflow-y:auto ;
+	position:fixed;
+	height: 100%;
+
+}
+.discussion-messages{
+	padding-right: 10px;
 }

@@ -1,4 +1,6 @@
 {
   "id": "cse-follwing-feed",
-  "public": true
+  "public": false,
+  "version": "1.0.38",
+  "name": "What's Up?"
 }

@@ -15,7 +15,7 @@
 	<script type="text/javascript">
 		
 		appInsights.startTrackPage("Page");
-
+		
 		///Part of templating html 
 		function render(props) {
  			 return function(tok, i) { 
@@ -43,12 +43,47 @@
 			usePlatformStyles: true
 		});
 		
-		
     	VSS.ready(function() {
-			//document.getElementById("name").innerText = VSS.getWebContext().user.name;		
+			//document.getElementById("name").innerText = VSS.getWebContext().user.name;
+			GetSetting("FilterSetting").then(function(filterSetting){
+				if (filterSetting==null){
+					filterSetting="somefields"
+				}
+				filterSelection.value=filterSetting;});
+			
 			
     	});
-				
+		
+		function SaveSetting(setting,value){
+			return new Promise(function(resolve, reject) {
+				try
+				{
+					VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) {
+					// Set value in user scope
+					dataService.setValue(setting, value, {scopeType: "User"}).then(function(value) {
+							resolve();
+						});
+					});
+				}
+				catch(Err){reject(Err);}
+			});
+		}
+		function GetSetting(setting){
+			return new Promise(function(resolve, reject) {
+				try
+				{
+					// Get data service
+					VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) {
+							// Get value in user scope
+							dataService.getValue(setting, {scopeType: "User"}).then(function(value) {
+								resolve(value);
+							});
+						});
+				}
+				catch(Err){reject(Err);}
+			});
+
+		}
 		VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authentication/Services"], function (VSS_Service, TFS_Wit_WebApi,VSS_Auth_Service) {
 			var context = VSS.getWebContext();
 			var projectId = context.project.id;
@@ -111,22 +146,24 @@
 											return myItemhtml;
 										}));
 									
+										updateVisibility(document.getElementById("filterSelection").value);
+
 										VSS.notifyLoadSucceeded();
 										appInsights.stopTrackPage("Page");
 									},function(err) {
 										console.log("========ERROR: "+err);
+										appInsights.trackException(err, "ErrFinal");
 									});
 
 							});
 
 					}catch(err)
-					{console.log("error queryByWiql:"+err);	}
+					{
+						console.log("error queryByWiql:"+err);
+						appInsights.trackException(err, "ErrqueryByWiql");
+					}
 				});
 						
-			// 	witClient.getWorkItems([1,2,3], ["System.Title"]).then( 
-			// 	witClient.getRevision(1,1).then(
-			// 	witClient.getUpdate(1,2).then(
-
 		});
 
 		function changeDisplay(elementClass,newValue){
@@ -141,13 +178,20 @@
 					element.removeAttribute("style")
 				});
 		}	
+
+		function onchangeFilter(element){
+			SaveSetting("FilterSetting",element);
+			updateVisibility(element);
+		}
 		function updateVisibility(element){
+			SaveSetting("FilterSetting",element);
 			switch(element)
 			{
 				case 'comments':
 					changeDisplay("showHideFields","none");
 					changeDisplay("showHideSpecialField","flex");
 					appInsights.trackEvent({name:"FilterComments"});
+					
 					break;
 				case 'somefields':
 					changeDisplay("showHideFields","block");
@@ -170,10 +214,11 @@
 		<div id="leftbox"><h2>Showing the latest updates on the work items you're following</h2></div>
 		<div id="rightbox">
 			<br>
-			<select onchange="updateVisibility(this.value)" style="align-content:flex-end ;">
+			<select id="filterSelection" onchange="onchangeFilter(this.value)" style="align-content:flex-end ;">
+				<option value="somefields">Show only most important updates</option>
 				<option value="all">Show all field changes and comments</option>
 				<option value="comments">Show only comments and no field changes</option>
-				<option value="somefields">Show only most important fields</option>
+				
 			</select>
 		</div>
 	</div>

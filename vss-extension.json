@@ -2,11 +2,13 @@
  	"manifestVersion": 1,
  	"id": "cse-follwing-feed",
  	"publisher": "TiagoAndradeeSilva",
- 	"version": "1.0.35",
  	"name": "What's Up?",
  	"description": "Recent updates from the work items you follow",
 	"scopes": [ "vso.work"],
- 	"categories": ["Azure Repos"],
+	 "categories": ["Azure Repos"],
+	 "icons": {
+		"default": "img/default-icon.png"
+	  },
  	"targets": [
  		{
  			"id": "Microsoft.VisualStudio.Services"
@@ -30,6 +32,10 @@
  		{
  			"path": "index.html",
  			"addressable": true
+		 },
+		 {
+			"path": "feed.js",
+			"addressable": true
 		 },
 		 {
 			"path": "azdo.css",

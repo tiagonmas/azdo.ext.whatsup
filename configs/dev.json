@@ -1,5 +1,7 @@
 {
-  "id": "cse-follwing-feed",
+  "id": "cse-follwing-feed-dev",
   "public": false,
+  "name": "What's Up Dev?",
+  "version": "1.0.37",
   "baseUri": "https://localhost:44300"
 }

@@ -1,5 +1,5 @@
 var authHeader,hostName,projectName;
-const SpecialFields="System.AuthorizedDate;System.RevisedDate;System.ChangedDate;System.Rev;System.ChangedBy"
+const SpecialFields="System.AuthorizedDate;System.RevisedDate;System.ChangedDate;System.Rev;System.ChangedBy;System.Watermark"
 
 //to dynamically access properties of an object, used in HTML Template.
 const getDescendantProp = (obj, path) => (
