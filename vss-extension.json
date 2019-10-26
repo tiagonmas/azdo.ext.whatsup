@@ -24,7 +24,8 @@
  			],
  			"properties": {
  				"name": "What's Up?",
- 				"uri": "index.html"
+				 "uri": "index.html",
+				 "icon": "asset://img/default-icon.png"
  			}
  		}
  	],
@@ -35,6 +36,11 @@
 		 },
 		 {
 			"path": "feed.js",
+			"addressable": true
+		 }
+		 ,
+		 {
+			"path": "main.js",
 			"addressable": true
 		 },
 		 {

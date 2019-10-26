@@ -1,17 +1,18 @@
 var authHeader,hostName,projectName;
-const SpecialFields="System.AuthorizedDate;System.RevisedDate;System.ChangedDate;System.Rev;System.ChangedBy;System.Watermark"
+const SpecialFields="System.AuthorizedDate;System.RevisedDate;System.ChangedDate;System.Rev;System.ChangedBy;System.Watermark;System.AuthorizedAs;System.PersonId"
 
 //to dynamically access properties of an object, used in HTML Template.
 const getDescendantProp = (obj, path) => (
     path.split('.').reduce((acc, part) => acc && acc[part], obj)
 );
 
-
+//Create timestamp from date so we can sort on integers instead of strings.
 function toTimestamp(strDate){
     var datum = Date.parse(strDate);
     return datum/1000;
 }
-//convert the json arrays returned from REST Api, into a "more flat array" so can be sorted by date
+
+//convert the json arrays returned from REST Api, into a "more flat array around updates" so it can be sorted by date
 function FlattenArr(inArray){
     var outArray=[];
 
@@ -23,9 +24,6 @@ function FlattenArr(inArray){
                 for(var j=0;j<inArray[i].count;j++)
                 {
                     outArray.push(inArray[i].value[j]);
-                    // var jsonData={createdDate:toTimestamp(inArray[i].comments[j].createdDate),comment:inArray[i].comments[j]};
-                    // //var jsonData={createdDate:i*j+i-j,comment:inArray[i].comments[j]};
-                    // outArray.push(jsonData);
                 }    
             }
     
@@ -48,11 +46,14 @@ function copyProperties(idsArr,updates)
             Object.defineProperty(item, 'title', { value: idItem.fields["System.Title"] } );  
             Object.defineProperty(item, 'workItemURL', { value: getWorkItemUrl(hostName,projectName,item.workItemId) } );  
             Object.defineProperty(item, 'numRevisions', { value: idItem.rev } );  
+            
             if(item.hasOwnProperty("fields")){
                 Object.defineProperty(item, 'timestamp', { value: toTimestamp(item.fields["System.ChangedDate"].newValue) } ); 
+                Object.defineProperty(item, 'datePassedDesc', { value: GetDateDiffDescriptionVsNow(item.fields["System.ChangedDate"].newValue) } );
             }
             else {
                 Object.defineProperty(item, 'timestamp', { value: toTimestamp(item.revisedDate) } ); 
+                Object.defineProperty(item, 'datePassedDesc', { value: GetDateDiffDescriptionVsNow(item.revisedDate) } );
             }
             Object.defineProperty(item, 'fieldsChangedHTML', { value: createfieldsChangedHTML(item) } ); 
         }
@@ -70,7 +71,7 @@ var getKeys = function(obj){
     return keys;
  }
 
-//Create the HTML that summarizes the changes made to a workitem
+//Create the HTML that summarizes the changes (in fields) made to a workitem
 function createfieldsChangedHTML(item)
 {   
     var html=[];
@@ -103,6 +104,8 @@ function createfieldsChangedHTML(item)
     return html.join("\n");
 }
 
+
+//Function to compare timestamps, to be used in sorting an array
 function compare( a, b ) {
     if ( a.timestamp < b.timestamp ){
       return 1;
@@ -142,7 +145,8 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName)
                 //updates.sort((a,b) => (a.timestamp > b.timestamp) ? 0 : ((b.timestamp > a.timestamp) ? -1 : 1));
                 updates.sort(compare);
                 resolve(updates);
-            }).catch(error => reject(error));
+            }).catch(error => 
+                reject(error));
         }
         catch(Err){
             console.error("Error:"+Err);
@@ -152,9 +156,8 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName)
 }
 
 
+//Perform a XMLHttpRequest authenticated json call to an URL (Using VSS token)
 function get(url) {
-
-        // Return a new promise.
     return new Promise(function(resolve, reject) {
       // Do the usual XHR stuff
       var req = new XMLHttpRequest();
@@ -171,7 +174,6 @@ function get(url) {
         }
         else {
           // Otherwise reject with the status text
-          // which will hopefully be a meaningful error
           reject(Error(req.statusText));
         }
       };
@@ -193,25 +195,60 @@ function escapeUnicode(str) {
     });
 }
 
+//Create the URL for VSS Work Item Updates REST API
 function getUpdateRestApiUrl(organization, project, id)
 {
     return "https://"+organization+".visualstudio.com/"+project+"/_apis/wit/workItems/"+id+"/updates/?api-version=5.1";
 }
 
+//Create the URL for VSS WorkItem Comments REST API
 function getCommentsRestApiUrl(organization, project, id)
 {
     return "https://"+organization+".visualstudio.com/"+project+"/_apis/wit/workItems/"+id+"/comments";
 }
 
+//Create the URL for a specific work item within an organization and project
 function getWorkItemUrl(organization, project, id)
 {
     //https://dev.azure.com/TASAlpineSkiHouse/MyFirstProject/_workitems/edit/1/
     return "https://"+organization+".visualstudio.com/"+project+"/_workItems/edit/"+id;
 }
-function getCommentsHTML(comments){
-    html=[];
-    comments.forEach(function(item,index){
-        html.push("<br>"+item.createdDate+" "+item.comment.text);
-    });
-    return html.join("");;
+
+
+//Return a written for of how long it passed sice a given date, if too long return just the date.
+function GetDateDiffDescriptionVsNow(_date){
+    try
+    {
+    var theDate=new Date(_date);
+    var now=new Date();
+    var dateDiff=DateDiffHours(theDate,now);
+    dateDiff=dateDiff*-1;
+    switch(true){
+        
+        case (dateDiff<1):
+            return "less than one hour ago";
+            break;
+        case (dateDiff>=1 &&  dateDiff < 24):
+            return Math.floor(dateDiff)+" hours ago";
+            break;
+        case (dateDiff>=24 &&  dateDiff < 48):
+            return "yesterday";
+            break;
+        case (dateDiff>=48 &&  dateDiff < 128):
+                return Math.floor(dateDiff/24)+" days ago";
+                break;
+        
+         default:
+            return "on "+theDate.toLocaleDateString();
+            
+            break;
+
+    }
+    }catch(Err){
+        console.log("Eorror in GetDateDiffDescriptionVsNow"+Err);
+    }
+}
+function DateDiffHours(date1, date2) {
+    var datediff = date1.getTime() - date2.getTime(); //store the getTime diff - or +
+    return (datediff / (60*60*1000));    
 }

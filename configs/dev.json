@@ -2,6 +2,6 @@
   "id": "cse-follwing-feed-dev",
   "public": false,
   "name": "What's Up Dev?",
-  "version": "1.0.37",
+  "version": "1.0.38",
   "baseUri": "https://localhost:44300"
 }
