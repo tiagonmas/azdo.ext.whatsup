@@ -17,8 +17,17 @@
  </head>
 <body style="overflow: visible;">    
 <div id="maincontent">
+		<h2>Showing the latest updates on the work items you're following</h2>
 	<div id="headbox" style="visibility: hidden;">
-		<div id="leftbox"><h2>Showing the latest updates on the work items you're following</h2></div>
+		<div id="leftbox">
+			<!--START Contributors TEMPLATE-->
+			<script type="text/template" data-template="contributorsTemplate">
+				<button class="avatar-button cursor-hover-card" id="${uniqueName}" onClick="filterByContributor_click(this.id)"><img class="avatar-button-image" src="${image}" alt="${name}" title="${name}"></button>
+			</script>
+			<!--End Contributors Template-->
+			<span id="contributors"></span>
+		</div>
+
 		<div id="rightbox">
 			<br>
 			<select id="filterSelection" onchange="onchangeFilter(this.value)" style="align-content:flex-end ;">
@@ -44,7 +53,7 @@
 					<div id="list-comment-items"></div>
 					<!--START COMMENT TEMPLATE-->
 					<script type="text/template" data-template="commentTemplate">
-						<div class="wit-comment-item">
+						<div class="wit-comment-item ${revisedBy.uniqueName}" >
 							<div class="comment-item-left">
 								<button class="avatar-button cursor-hover-card"><img class="avatar-button-image" src="${revisedBy.imageUrl}" alt="${revisedBy.displayName}"></button>
 							</div>
@@ -69,7 +78,7 @@
 					<!--END COMMENT TEMPLATE-->
 					<!--START FIELDS TEMPLATE-->
 					<script type="text/template" data-template="fieldsTemplate">
-						<div class="wit-comment-item showHideFields">
+						<div class="wit-comment-item showHideFields ${revisedBy.uniqueName}">
 							<div class="comment-item-left">
 								<button class="avatar-button cursor-hover-card"><img class="avatar-button-image" src="${revisedBy.imageUrl}" alt="${revisedBy.displayName}"></button>
 							</div>

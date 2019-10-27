@@ -1,5 +1,8 @@
-var authHeader,hostName,projectName;
 const SpecialFields="System.AuthorizedDate;System.RevisedDate;System.ChangedDate;System.Rev;System.ChangedBy;System.Watermark;System.AuthorizedAs;System.PersonId"
+
+var authHeader,hostName,projectName;
+const contributors=new Map(); //hashmap to store all users that have updates
+
 
 //to dynamically access properties of an object, used in HTML Template.
 const getDescendantProp = (obj, path) => (
@@ -35,10 +38,19 @@ function FlattenArr(inArray){
     return outArray;
 }
 
+function addContributor(contributor){
+
+    if (contributors.has(contributor.uniqueName))
+    {contributors.get(contributor.uniqueName).contributions++;}
+    else
+    {contributors.set(contributor.uniqueName,{uniqueName:contributor.uniqueName, image:contributor.imageUrl,contributions:1,name:contributor.displayName});}
+}
+
 //Copy information from idsArr to the updates arrays, so each item has "complete info" 
 function copyProperties(idsArr,updates)
 {
     updates.forEach(function(item) {
+        addContributor(item.revisedBy);
         var idItem=idsArr.find(x => x.id === item.workItemId);
         if (idItem==null) 
             {console.log("Error id not found:" + item.id);}
@@ -61,6 +73,14 @@ function copyProperties(idsArr,updates)
     
 }
 
+//Convert a hashmap to an array since toArray() function was not working
+function ConvertMaptoArray(hashmap){
+    var newArray=[];
+    hashmap.forEach(function(item){
+        newArray.push(item);
+    });
+    return newArray;
+}
 //https://stackoverflow.com/questions/208016/how-to-list-the-properties-of-a-javascript-object
 //List all properties of an object
 var getKeys = function(obj){
@@ -106,7 +126,7 @@ function createfieldsChangedHTML(item)
 
 
 //Function to compare timestamps, to be used in sorting an array
-function compare( a, b ) {
+function compareTimestamp( a, b ) {
     if ( a.timestamp < b.timestamp ){
       return 1;
     }
@@ -115,7 +135,15 @@ function compare( a, b ) {
     }
     return 0;
   }
-
+  function compareContributions( a, b ) {
+    if ( a.contributions < b.contributions ){
+      return 1;
+    }
+    if ( a.contributions > b.contributions ){
+      return -1;
+    }
+    return 0;
+  }
 //Call Rest API's based on array of ID's 
 function fetchContent(_idsArr,_authHeader,_hostName,_projectName)
 {
@@ -143,7 +171,7 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName)
                 copyProperties(_idsArr,updates);
                 //Sort by date (timestamp)
                 //updates.sort((a,b) => (a.timestamp > b.timestamp) ? 0 : ((b.timestamp > a.timestamp) ? -1 : 1));
-                updates.sort(compare);
+                updates.sort(compareTimestamp);
                 resolve(updates);
             }).catch(error => 
                 reject(error));

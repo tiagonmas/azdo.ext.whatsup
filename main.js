@@ -1,5 +1,5 @@
 var LastExecDate //Last time the extension was executed. Saved in settings.
-
+var filteredUser="";
 appInsights.startTrackPage("Page");
 
 ///Part of templating html 
@@ -120,7 +120,22 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                                 //Update UI with comments applying template
                                 var commentTpl = $('script[data-template="commentTemplate"]').text().split(/\$\{(.+?)\}/g);
                                 var fieldsTpl = $('script[data-template="fieldsTemplate"]').text().split(/\$\{(.+?)\}/g);
-                                
+                                var contributorsTpl = $('script[data-template="contributorsTemplate"]').text().split(/\$\{(.+?)\}/g);
+
+
+                                try{
+                                    
+                                    //var contriArray=contributors.values().toArray();
+                                    var contriArray=ConvertMaptoArray(contributors);
+                                    $('#contributors').append(contriArray.map(function (item) {
+                                        return contributorsTpl.map(render(item)).join('');
+                                    }));           
+                                    contriArray.sort(compareContributions);                         
+
+                                }catch(Err){
+                                     console.log("Err:"+Err);
+                                }
+
                                 $('#list-comment-items').append(updates.map(function (item) {
                                     var myItemhtml;
                                     if (item.hasOwnProperty("fields")){
@@ -154,13 +169,19 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                 
 });
 
-function changeDisplay(elementClass,newValue){
+// function changeDisplayById(elementId,newValue){
+    
+//     Array.prototype.forEach.call(document.getElementsById(elementId),element => {	
+//             element.style.display = newValue;	
+//         });
+// }
+function changeDisplayByClassName(elementClass,newValue){
     
         Array.prototype.forEach.call(document.getElementsByClassName(elementClass),element => {	
                 element.style.display = newValue;	
             });
 }
-function removeStyle(elementClass){
+function removeStyleByClassName(elementClass){
     
     Array.prototype.forEach.call(document.getElementsByClassName(elementClass),element => {	
             element.removeAttribute("style")
@@ -178,21 +199,36 @@ function updateVisibility(element){
     switch(element)
     {
         case 'comments':
-            changeDisplay("showHideFields","none");
-            changeDisplay("showHideSpecialField","flex");
+            changeDisplayByClassName("showHideFields","none");
+            changeDisplayByClassName("showHideSpecialField","flex");
             appInsights.trackEvent({name:"FilterComments"});
             
             break;
         case 'somefields':
-            changeDisplay("showHideFields","block");
-            changeDisplay("showHideSpecialField","none");	
+            changeDisplayByClassName("showHideFields","block");
+            changeDisplayByClassName("showHideSpecialField","none");	
             appInsights.trackEvent({name:"FilterSomeFields"});
             break;
         case 'all':
-            changeDisplay("showHideFields","block");
-            removeStyle("showHideSpecialField");
+            changeDisplayByClassName("showHideFields","block");
+            removeStyleByClassName("showHideSpecialField");
             appInsights.trackEvent({name:"FilterAll"});
             break;
     }
 
 }
+
+function filterByContributor_click(user){
+    
+    contributors.forEach(function(item){
+        if(item.uniqueName==user){
+            changeDisplayByClassName(item.uniqueName,"block");
+        }else {
+            changeDisplayByClassName(item.uniqueName,"none");
+        }
+    });
+    
+    filteredUser=user;
+}
+
+

@@ -109,3 +109,8 @@ body {
 .discussion-messages{
 	padding-right: 10px;
 }
+.avatar-button-image{
+	height: 28px;
+	width: 28px;
+	border-radius: 14px;
+}
