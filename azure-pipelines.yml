@@ -1,0 +1,34 @@
+# Node.js
+# Build a general Node.js project with npm.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '10.x'
+  displayName: 'Install Node.js'
+
+- script: |
+    npm install vss-web-extension-sdk --save
+  displayName: 'install vss-web-extension-sdk'
+
+- script: |
+    npm i -g tfx-cli
+  displayName: 'install tfx cli'
+
+- script: |
+      echo {\"id\": \"cse-follwing-feed\",\"public\": false, \"version\": \"$(Build.BuildNumber)\",\"name\": \"What\'s Up?\"} > pipeline.json
+  displayName: 'create pipeline.json'
+
+- script: |
+        tfx extension publish --manifest-globs vss-extension.json --overrides-file pipeline.json --token $(PAT)
+  displayName: 'Publish Extension'
+
+
