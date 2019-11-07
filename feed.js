@@ -43,7 +43,13 @@ function addContributor(contributor){
     if (contributors.has(contributor.uniqueName))
     {contributors.get(contributor.uniqueName).contributions++;}
     else
-    {contributors.set(contributor.uniqueName,{uniqueName:contributor.uniqueName, image:contributor.imageUrl,contributions:1,name:contributor.displayName});}
+    { 
+        contributors.set(contributor.uniqueName,{uniqueName:contributor.uniqueName, image:contributor.imageUrl,contributions:1,name:contributor.displayName});
+
+        // if (contributor.uniqueName.indexOf("VisualStudio")==-1)
+        // {
+        // }
+    }
 }
 
 //Copy information from idsArr to the updates arrays, so each item has "complete info" 

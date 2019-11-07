@@ -1,17 +1,15 @@
 
-body {
-    background-color: rgb(255, 255, 255);
-    color: white;
-	margin: 10px;
-    border-left: thick double #ffffff;			
-    font-family: "Segoe UI VSS (Regular)","-apple-system",BlinkMacSystemFont,"Segoe UI",sans-serif;
-}
 
-#maincontent{
-	padding-left: 1.5em;
-	padding-right: 1.5em;
-}
 
+.work-item-form-main-core {
+    background-color: rgba(248,248,248,1);
+    background-color: rgba(var(--palette-neutral-2,248, 248, 248),1);
+    border-width: 1px 0;
+    border-style: solid;
+    border-color: rgba(234,234,234,1);
+    border-color: rgba(var(--palette-neutral-8,234, 234, 234),1);
+    padding-top: 8px;
+}
 
 /* CSS file: WorkItemTracking/Controls/WorkItemForm/Comments/CommentEditor */
 .wit-comment-editor{display:flex;flex-direction:column}.wit-comment-editor .html-editor .rooster-wrapper{border-radius:5px}.wit-comment-editor .html-editor .rooster-wrapper .rooster-editor{padding:4px 7px}.wit-comment-editor .comment-message-button-area{display:flex;justify-content:flex-end;margin-bottom:12px;padding:10px 3px 0}.wit-comment-editor .editor-cancel-button{margin-right:7px}
@@ -44,6 +42,19 @@ body {
 
 .mention-preview-person-clickable {
     cursor: pointer;
+}
+
+body {
+    background-color: rgb(255, 255, 255);
+    color: white;
+	margin: 10px;
+    border-left: thick double #ffffff;			
+    font-family: "Segoe UI VSS (Regular)","-apple-system",BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+#maincontent{
+	padding-left: 1.5em;
+	padding-right: 1.5em;
 }
 
 
@@ -80,14 +91,31 @@ body {
 
 #headbox{
 	width:100%; 
-	height: 60px;
+	height: 70px;
 	display:flex;
+	border: 0px solid;
+	border-color:rgba(var(--palette-neutral-8,234,234,234),1);
+	border-radius:5px;
 }
 #leftbox { 
-	float:left;  
+	/*float:left;  
 	width:75%; 
+	overflow-x:scroll;
+	overflow-y:auto;
+	 visibility:hidden; */
+	 width:75%;
+	padding:10px;
+    white-space:nowrap;
+	overflow-x:auto;
+	height:70px;
+	overflow-y:hidden;
 } 
+#centerbox{ 
+	float:right; 
+	width:25%; 
+	vertical-align: bottom; 
 
+} 
 #rightbox{ 
 	float:right; 
 	width:25%; 
@@ -104,6 +132,9 @@ body {
 	overflow-y:auto ;
 	position:fixed;
 	height: 100%;
+	width:95%;
+	padding-bottom: 20px;
+	padding-top: 10px;
 
 }
 .discussion-messages{
@@ -114,3 +145,26 @@ body {
 	width: 28px;
 	border-radius: 14px;
 }
+.contributors{
+	/* display: flex; 
+	flex-direction: row;
+	padding-left: 10px;
+	padding-top:5px; */
+	/* width:100px;
+    height:180px; */
+    
+    margin:10px;
+    display:inline-block
+	
+}
+
+.contributors .button{
+	height: 35px;
+}
+#list-comment-items{
+	padding-top:10px;
+}
+.filterSelection{
+	padding-top:5px;
+}
+

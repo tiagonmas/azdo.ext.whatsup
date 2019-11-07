@@ -9,39 +9,63 @@
 		);window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length&&aisdk.trackPageView({});
 		</script>
 	<script src="lib/VSS.SDK.min.js"></script>
+	
 	<script src="main.js"></script>
 	<script src="feed.js"></script>
 
-	<link rel="stylesheet" type="text/css"href="azdo.css">
-	
+	<link rel="stylesheet" type="text/css"href="azdo.css"/>
+	<link rel="stylesheet" type="text/css" href="https://cdn.vsassets.io/v/M159_20191103.2/_ext/ms.vss-features/ui-hub-content/ms.vss-features.ui-hub-content.min.css"/>
+	<link rel="stylesheet" type="text/css" href="https://cdn.vsassets.io/v/M159_20191105.2/_ext/ms.vss-features/ui-core-content/ms.vss-features.ui-core-content.min.css" />
+	<link rel="stylesheet"  type="text/css" href="https://cdn.vsassets.io/v/M159_20191103.2/_ext/ms.vss-features/ui-filterbar-content/ms.vss-features.ui-filterbar-content.min.css"/>
+	<!-- <link rel="stylesheet"  type="text/css" href="https://cdn.vsassets.io/v/M159_20191105.2/_cssbundles/Default/vss-bundle-asynccss-v6KwFzq3QQhA7byNsUSU2h2ryaO3cdx0qoC9706cIT9k="/> -->
  </head>
-<body style="overflow: visible;">    
+<body style="overflow: visible;" onload="pageLoaded()">    
 <div id="maincontent">
-		<h2>Showing the latest updates on the work items you're following</h2>
-	<div id="headbox" style="visibility: hidden;">
+		
+		<h1 class="vss-HubTitle"><div class="vss-HubTitle--titleText">Latest updates on the work items you're following <i class="ms-Icon ms-Icon--Feedback" aria-hidden="true"></i></div></h1>
+	<div id="headbox" style="visibility: hidden;" class="vss-FilterBar">
 		<div id="leftbox">
+			
+			Author:
+			<div class="contributors">
+			
 			<!--START Contributors TEMPLATE-->
 			<script type="text/template" data-template="contributorsTemplate">
 				<button class="avatar-button cursor-hover-card" id="${uniqueName}" onClick="filterByContributor_click(this.id)"><img class="avatar-button-image" src="${image}" alt="${name}" title="${name}"></button>
 			</script>
 			<!--End Contributors Template-->
-			<span id="contributors"></span>
-		</div>
+			<span id="contributors">
+					<!-- <button class="avatar-button cursor-hover-card" id="resetToAll" onClick="filterByContributor_click(this.id)">ALL</button>	 -->
 
+					<button class="avatar-button cursor-hover-card" id="resetToAll" onClick="filterByContributor_click(this.id)"><span aria-hidden="true" class="keyword-filter-icon prefix bolt-textfield-icon bolt-textfield-no-text flex-noshrink fabric-icon ms-Icon--ClearFilter"></span></button>
+			</span>
+			</div>
+		</div>
+		<div id="centerbox">
+				Load items updated since:
+				<br><select id="dateFilter" onchange="onchangeDateFilter(this.value)">
+					<!-- <option value='last'>Last time here</option> -->
+					<option value='one'>Yesterday</option>
+					<option value='seven'>A week ago</option>
+					<option value='all'>I was born</option>
+				</select>
+		</div>
 		<div id="rightbox">
-			<br>
-			<select id="filterSelection" onchange="onchangeFilter(this.value)" style="align-content:flex-end ;">
-				<option value="somefields">Show only most important updates</option>
-				<option value="all">Show all field changes and comments</option>
-				<option value="comments">Show only comments and no field changes</option>
+			Show
+			<br><select id="filterSelection" onchange="onchangeShowFilter(this.value)" style="align-content:flex-end ;">
+				<option value="somefields">only most important updates</option>
+				<option value="all">all field changes and comments</option>
+				<option value="comments">only comments and no field changes</option>
 				
 			</select>
+			
 		</div>
+		
 	</div>
 	<div id="nocontent" style="visibility: hidden;">
 		<h2>Welcome!</h2>
-		<br>Here you'll see a feed of the changes to the work items you're following. Since you're not currently following anything, there is nothing to show for now.
-		<br>Click the "Follow" button on your favorite work items and come back to this page to see their updates
+		<br>Here you'll see a feed of the changes to the work items you're following. Since you're not currently following, there is nothing to show for now (or maybe there are no updates on the items you're following).
+		Click the "Follow" button on your favorite work items and come back to this page to see their updates, or change the "Load items updated since" filter.
 		<p>Sample image:</p>
 		<br><img src="https://docs.microsoft.com/en-us/azure/devops/boards/work-items/_img/follow-work/follow-work-item.png?view=azure-devops"/>
 		<p>More information: <A href="https://docs.microsoft.com/en-us/azure/devops/boards/work-items/follow-work-items?view=azure-devops">Tutorial: Follow a user story, bug, issue, or other work item or pull request</A>

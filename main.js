@@ -2,24 +2,6 @@ var LastExecDate //Last time the extension was executed. Saved in settings.
 var filteredUser="";
 appInsights.startTrackPage("Page");
 
-///Part of templating html 
-function render(props) {
-        return function(tok, i) { 
-            //  return (i % 2) ? getDescendantProp(props,tok) : tok; 
-            //return (i % 2) ? Object.byString(props,tok) : tok; 
-            if (i % 2){
-                //NEEDS TO BE FIXED. getDescendantProp is not solving for this nested type query because of the dot.
-                return eval("props."+tok);
-                // if (tok=="fields[System.History][newValue]") {
-                // 	// //return props.fields[System.History][newValue]];
-                // 	return props.fields["System.History"].newValue;
-                // }else {
-                // 	return getDescendantProp(props,tok);
-                // }
-            }
-            else {return tok;}
-        };
-}
 
 VSS.init({
     explicitNotifyLoaded: true,
@@ -29,16 +11,19 @@ VSS.init({
 
 VSS.ready(function() {
     
-    GetSetting("FilterSetting").then(function(filterSetting){
-        if (filterSetting==null){
-            filterSetting="somefields"
+    GetSetting("FilterSetting").then(function(_filterSetting){
+        if (_filterSetting==null){
+            _filterSetting="somefields";
         }
-        filterSelection.value=filterSetting;});
+        filterSelection.value=_filterSetting;});
+
+    GetSetting("DateFilter").then(function(_dateFilter){
+        if (_dateFilter==null){
+            _dateFilter="seven";
+        }
+        dateFilter.value=_dateFilter;});
+
     
-    GetSetting("LastExecDate").then(function(_lastExecDate){
-        LastExecDate=_lastExecDate;
-        SaveSetting("LastExecDate",new Date());
-    });
     
 });
 
@@ -88,7 +73,29 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                 var witClient = VSS_Service.getCollectionClient(TFS_Wit_WebApi.WorkItemTrackingHttpClient);
                 
                 //Get all the workitems that we're following
-                var query = {query: "SELECT [System.Id] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') ORDER BY [System.ChangedDate] DESC" };
+                GetSetting("LastExecDate").then(function(_lastExecDate){
+                    LastExecDate=_lastExecDate;
+                    SaveSetting("LastExecDate",new Date());
+                }).then(function(){
+                var query;
+                switch(dateFilter.value){
+                    case 'all':
+                        query = {query: "SELECT [System.Id] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') ORDER BY [System.ChangedDate] DESC" };
+                        break;
+                    case 'last':
+                        query = {query: "SELECT [System.Id] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') AND [System.ChangedDate]>@today-1 ORDER BY [System.ChangedDate] DESC" };
+                        
+                        break;
+                    case 'one':
+                        query = {query: "SELECT [System.Id] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') AND [System.ChangedDate]>@today-1 ORDER BY [System.ChangedDate] DESC" };
+                        break;
+                    case 'seven':
+                        query = {query: "SELECT [System.Id] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') AND [System.ChangedDate]>@today-7 ORDER BY [System.ChangedDate] DESC" };
+                        break;
+
+        
+                }
+                
                 witClient.queryByWiql(query, projectId).then(
                     function(queryByWiqlResult) {  
                         var idsArr=new Array(queryByWiqlResult.workItems.length);
@@ -96,7 +103,7 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                         {
                             appInsights.trackEvent({name: "noContent"});
                             document.getElementById("nocontent").style.visibility="visible" ;
-                            document.getElementById("headbox").style.visibility="hidden" ;
+                            document.getElementById("headbox").style.visibility="visible" ;
                             
                             //Improve: break out of promise chain. No need to continue moving forward 
                         }
@@ -112,53 +119,58 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                         }								
                         return idsArr;
                     }).then(function(idsArr){
-                        return witClient.getWorkItems(idsArr, ["System.Title"])
+                        if (idsArr.length>0)
+                        {return witClient.getWorkItems(idsArr, ["System.Title"]);}
+                        else {return [];}
                     }).then(function(itemsArr){
-                        fetchContent(itemsArr,authHeader,HostName,projectName).
-                            then(function(updates){
-                                
-                                //Update UI with comments applying template
-                                var commentTpl = $('script[data-template="commentTemplate"]').text().split(/\$\{(.+?)\}/g);
-                                var fieldsTpl = $('script[data-template="fieldsTemplate"]').text().split(/\$\{(.+?)\}/g);
-                                var contributorsTpl = $('script[data-template="contributorsTemplate"]').text().split(/\$\{(.+?)\}/g);
-
-
-                                try{
+                        if (itemsArr.length>0)
+                        {fetchContent(itemsArr,authHeader,HostName,projectName).
+                                then(function(updates){
                                     
-                                    //var contriArray=contributors.values().toArray();
-                                    var contriArray=ConvertMaptoArray(contributors);
-                                    $('#contributors').append(contriArray.map(function (item) {
-                                        return contributorsTpl.map(render(item)).join('');
-                                    }));           
-                                    contriArray.sort(compareContributions);                         
+                                    //Update UI with comments applying template
+                                    var commentTpl = $('script[data-template="commentTemplate"]').text().split(/\$\{(.+?)\}/g);
+                                    var fieldsTpl = $('script[data-template="fieldsTemplate"]').text().split(/\$\{(.+?)\}/g);
+                                    var contributorsTpl = $('script[data-template="contributorsTemplate"]').text().split(/\$\{(.+?)\}/g);
 
-                                }catch(Err){
-                                     console.log("Err:"+Err);
-                                }
 
-                                $('#list-comment-items').append(updates.map(function (item) {
-                                    var myItemhtml;
-                                    if (item.hasOwnProperty("fields")){
-                                        var myfields=item.fields;
-                                        if(myfields.hasOwnProperty("System.History")){
-                                            myItemhtml=commentTpl.map(render(item)).join('');
-                                        }else {
-                                            myItemhtml=fieldsTpl.map(render(item)).join('');
-                                        }
+                                    try{
+                                        
+                                        //var contriArray=contributors.values().toArray();
+                                        var contriArray=ConvertMaptoArray(contributors);
+                                        $('#contributors').append(contriArray.map(function (item) {
+                                            return contributorsTpl.map(render(item)).join('');
+                                        }));           
+                                        contriArray.sort(compareContributions);                         
+
+                                    }catch(Err){
+                                        console.log("Err:"+Err);
                                     }
-                                    return myItemhtml;
-                                }));
-                            
-                                updateVisibility(document.getElementById("filterSelection").value);
 
-                                VSS.notifyLoadSucceeded();
-                                appInsights.stopTrackPage("Page");
-                            },function(err) {
-                                console.log("========ERROR: "+err);
-                                appInsights.trackException(err, "ErrFinal");
-                            });
+                                    $('#list-comment-items').append(updates.map(function (item) {
+                                        var myItemhtml;
+                                        if (item.hasOwnProperty("fields")){
+                                            var myfields=item.fields;
+                                            if(myfields.hasOwnProperty("System.History")){
+                                                myItemhtml=commentTpl.map(render(item)).join('');
+                                            }else {
+                                                myItemhtml=fieldsTpl.map(render(item)).join('');
+                                            }
+                                        }
+                                        return myItemhtml;
+                                    }));
+                                
+                                    updateVisibility(document.getElementById("filterSelection").value);
 
+                                    appInsights.stopTrackPage("Page");
+                                },function(err) {
+                                    console.log("========ERROR: "+err);
+                                    appInsights.trackException(err, "ErrFinal");
+                                });
+
+                        }
+                        VSS.notifyLoadSucceeded();
                     });
+                })
 
             }catch(err)
             {
@@ -169,12 +181,6 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                 
 });
 
-// function changeDisplayById(elementId,newValue){
-    
-//     Array.prototype.forEach.call(document.getElementsById(elementId),element => {	
-//             element.style.display = newValue;	
-//         });
-// }
 function changeDisplayByClassName(elementClass,newValue){
     
         Array.prototype.forEach.call(document.getElementsByClassName(elementClass),element => {	
@@ -188,9 +194,15 @@ function removeStyleByClassName(elementClass){
         });
 }	
 
-function onchangeFilter(element){
-    SaveSetting("FilterSetting",element);
-    updateVisibility(element);
+
+function onchangeDateFilter(element){
+    SaveSetting("DateFilter",element).then(function(){window.location.reload();});
+    
+    
+}
+function onchangeShowFilter(element){
+    SaveSetting("FilterSetting",element).then(function(){updateVisibility(element);});
+    
 }
 
 //Show or hide html elements based on the information we want to see (Filter drop down)
@@ -219,16 +231,43 @@ function updateVisibility(element){
 }
 
 function filterByContributor_click(user){
+    updateVisibility(document.getElementById("filterSelection").value);
     
+    document.getElementById("resetToAll").disabled = (user=='resetToAll'); //enable the Reset filter only if we're filtering by user
+
     contributors.forEach(function(item){
-        if(item.uniqueName==user){
+        if(user=='resetToAll' || item.uniqueName==user ){
             changeDisplayByClassName(item.uniqueName,"block");
+            
         }else {
             changeDisplayByClassName(item.uniqueName,"none");
         }
     });
     
     filteredUser=user;
+    
+}
+
+function pageLoaded(){
+    document.getElementById("resetToAll").disabled = true; 
 }
 
 
+///Part of templating html 
+function render(props) {
+    return function(tok, i) { 
+        //  return (i % 2) ? getDescendantProp(props,tok) : tok; 
+        //return (i % 2) ? Object.byString(props,tok) : tok; 
+        if (i % 2){
+            //NEEDS TO BE FIXED. getDescendantProp is not solving for this nested type query because of the dot.
+            return eval("props."+tok);
+            // if (tok=="fields[System.History][newValue]") {
+            // 	// //return props.fields[System.History][newValue]];
+            // 	return props.fields["System.History"].newValue;
+            // }else {
+            // 	return getDescendantProp(props,tok);
+            // }
+        }
+        else {return tok;}
+    };
+}
