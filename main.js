@@ -1,4 +1,5 @@
 var LastExecDate //Last time the extension was executed. Saved in settings.
+var filterFromDate=new Date() //Date when we should start showing events from 
 var filteredUser="";
 appInsights.startTrackPage("Page");
 
@@ -81,16 +82,15 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                 switch(dateFilter.value){
                     case 'all':
                         query = {query: "SELECT [System.Id] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') ORDER BY [System.ChangedDate] DESC" };
-                        break;
-                    case 'last':
-                        query = {query: "SELECT [System.Id] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') AND [System.ChangedDate]>@today-1 ORDER BY [System.ChangedDate] DESC" };
-                        
+                        filterFromDate=null;
                         break;
                     case 'one':
                         query = {query: "SELECT [System.Id] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') AND [System.ChangedDate]>@today-1 ORDER BY [System.ChangedDate] DESC" };
+                        filterFromDate.setDate(filterFromDate.getDate()-1);
                         break;
                     case 'seven':
                         query = {query: "SELECT [System.Id] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') AND [System.ChangedDate]>@today-7 ORDER BY [System.ChangedDate] DESC" };
+                        filterFromDate.setDate(filterFromDate.getDate()-7);
                         break;
 
         
@@ -124,7 +124,7 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                         else {return [];}
                     }).then(function(itemsArr){
                         if (itemsArr.length>0)
-                        {fetchContent(itemsArr,authHeader,HostName,projectName).
+                        {fetchContent(itemsArr,authHeader,HostName,projectName,filterFromDate).
                                 then(function(updates){
                                     
                                     //Update UI with comments applying template

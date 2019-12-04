@@ -40,15 +40,21 @@ function FlattenArr(inArray){
 
 function addContributor(contributor){
 
-    if (contributors.has(contributor.uniqueName))
-    {contributors.get(contributor.uniqueName).contributions++;}
-    else
-    { 
-        contributors.set(contributor.uniqueName,{uniqueName:contributor.uniqueName, image:contributor.imageUrl,contributions:1,name:contributor.displayName});
-
-        // if (contributor.uniqueName.indexOf("VisualStudio")==-1)
-        // {
-        // }
+    if (typeof contributor.uniqueName !== 'undefined')
+    {
+        if (contributors.has(contributor.uniqueName))
+        {contributors.get(contributor.uniqueName).contributions++;}
+        else
+        { 
+            try{
+                if (contributor.uniqueName.indexOf("VisualStudio")==-1)
+                {
+                    contributors.set(contributor.uniqueName,{uniqueName:contributor.uniqueName, image:contributor.imageUrl,contributions:1,name:contributor.displayName});
+                }
+            }catch(err){
+                console.log("addContributor: Error : "+err);
+            }
+        }
     }
 }
 
@@ -97,6 +103,25 @@ var getKeys = function(obj){
     return keys;
  }
 
+ 
+function getObjectFields(field,item)
+{
+    if (field=="System.ChangedBy" || field=="System.CreatedBy" || field=="System.AuthorizedAs" || field=="System.AssignedTo")
+    {
+        return item["displayName"];
+    }
+    else{
+        var html=[];
+        var keys = [];
+        html.push("<span>");
+        for(var key in item){
+           html.push("<br>"+key+"="+item[key]);
+        }
+        html.push("</span>");
+        return html.join("");
+    }
+
+}
 //Create the HTML that summarizes the changes (in fields) made to a workitem
 function createfieldsChangedHTML(item)
 {   
@@ -118,11 +143,26 @@ function createfieldsChangedHTML(item)
             
             html.push("<div class=\"divTableCell\">"+field+"</div>");
             if(item.fields[field].hasOwnProperty("oldValue"))
-                {html.push("<div class=\"divTableCell\"><del>"+item.fields[field].oldValue+"</del></div>");}
+                {
+                    if (typeof item.fields[field].oldValue === 'object')
+                    {
+                        html.push("<div class=\"divTableCell\"><del>"+getObjectFields(field,item.fields[field].oldValue)+"</del></div>");
+                    }else {
+                        html.push("<div class=\"divTableCell\"><del>"+item.fields[field].oldValue+"</del></div>");
+                    }
+                }
             else {html.push("<div class=\"divTableCell\">&nbsp;</div>");}
             
             if(item.fields[field].hasOwnProperty("newValue"))
-                {html.push("<div class=\"divTableCell\">"+item.fields[field].newValue+"</div>");}
+            {
+                if (typeof item.fields[field].newValue === 'object')
+                {
+                    html.push("<div class=\"divTableCell\">"+getObjectFields(field,item.fields[field].newValue)+"</div>");
+                }else {
+                    html.push("<div class=\"divTableCell\">"+item.fields[field].newValue+"</div>");
+                }
+                
+            }
             else {html.push("<div class=\"divTableCell\">&nbsp;</div>");}
             html.push("</div>");
      });
@@ -150,8 +190,23 @@ function compareTimestamp( a, b ) {
     }
     return 0;
   }
+
+  function revoveItemsBeforeDate(itemArr,_dateFilter){
+    var retArr=[];
+    if (_dateFilter==null){return itemArr;}
+
+    _dateFilterTimeStamp=toTimestamp(_dateFilter);
+    try{
+        itemArr.forEach(element => {
+            if(element.timestamp>_dateFilterTimeStamp)
+            {retArr.push(element);}
+        });
+    }
+    catch(err){console.log("err "+ err);}
+    return retArr;
+  }
 //Call Rest API's based on array of ID's 
-function fetchContent(_idsArr,_authHeader,_hostName,_projectName)
+function fetchContent(_idsArr,_authHeader,_hostName,_projectName,_dateFilter)
 {
     return new Promise(function(resolve, reject) {
 
@@ -171,9 +226,9 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName)
             }
             Promise.all(promiseArr).then(function(values) {
                 
-                console.log("Promise.all done");
                 var updates=FlattenArr(values);
                 console.log("Got updates:"+updates.length);
+                updates=revoveItemsBeforeDate(updates,_dateFilter);
                 copyProperties(_idsArr,updates);
                 //Sort by date (timestamp)
                 //updates.sort((a,b) => (a.timestamp > b.timestamp) ? 0 : ((b.timestamp > a.timestamp) ? -1 : 1));
