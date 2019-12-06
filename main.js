@@ -12,20 +12,7 @@ VSS.init({
 
 VSS.ready(function() {
     
-    GetSetting("FilterSetting").then(function(_filterSetting){
-        if (_filterSetting==null){
-            _filterSetting="somefields";
-        }
-        filterSelection.value=_filterSetting;});
 
-    GetSetting("DateFilter").then(function(_dateFilter){
-        if (_dateFilter==null){
-            _dateFilter="seven";
-        }
-        dateFilter.value=_dateFilter;});
-
-    
-    
 });
 
 function SaveSetting(setting,value){
@@ -65,6 +52,8 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
     var HostName = context.host.name;
     var HostUri = context.host.uri;
 
+    
+
     VSS.getAccessToken().then(function(token){
             return VSS_Auth_Service.authTokenManager.getAuthorizationHeader(token);
         }).then(function(authHeader){					
@@ -73,12 +62,30 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
             {
                 var witClient = VSS_Service.getCollectionClient(TFS_Wit_WebApi.WorkItemTrackingHttpClient);
                 
-                //Get all the workitems that we're following
+                //Get exisiting settings
+                GetSetting("FilterSetting").then(function(_filterSetting){
+                    if (_filterSetting==null){
+                        _filterSetting="somefields";
+                    }
+                    console.log("FilterSetting="+_filterSetting);
+                    filterSelection.value=_filterSetting;});
+
+                    
                 GetSetting("LastExecDate").then(function(_lastExecDate){
                     LastExecDate=_lastExecDate;
-                    SaveSetting("LastExecDate",new Date());
+                    SaveSetting("LastExecDate",new Date());});
+
+                //To do: All the getsettings should wait for completion before moving forward. promise all...
+                GetSetting("DateFilter").then(function(_dateFilter){
+                    if (_dateFilter==null){
+                        _dateFilter="seven";
+                    }
+                    console.log("DateFilter="+_dateFilter);
+                    dateFilter.value=_dateFilter;
                 }).then(function(){
+
                 var query;
+                
                 switch(dateFilter.value){
                     case 'all':
                         query = {query: "SELECT [System.Id] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') ORDER BY [System.ChangedDate] DESC" };
@@ -92,10 +99,22 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                         query = {query: "SELECT [System.Id] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') AND [System.ChangedDate]>@today-7 ORDER BY [System.ChangedDate] DESC" };
                         filterFromDate.setDate(filterFromDate.getDate()-7);
                         break;
-
+                    case 'month':
+                            query = {query: "SELECT [System.Id] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') AND [System.ChangedDate]>@today-31 ORDER BY [System.ChangedDate] DESC" };
+                            filterFromDate.setDate(filterFromDate.getDate()-31);
+                            break;
         
                 }
-                
+
+                console.log("DateFilter combo is "+dateFilter.value+" and query="+query.query);
+                //https://docs.microsoft.com/en-us/azure/devops/extend/reference/client/api/tfs/workitemtracking/restclient/workitemtrackinghttpclient2_2?view=azure-devops#method_queryById
+                //https://docs.microsoft.com/en-us/azure/devops/extend/reference/client/api/tfs/workitemtracking/restclient/workitemtrackinghttpclient2_2?view=azure-devops#method_queryById
+                // witClient.queryById("3397ce13-7f0f-4737-a453-820bb890c37e",projectId).then(function(foo){
+                //     console.log("queryById"+foo);
+                // },function(bar){
+                //     console.log("queryById rejected"+bar);
+                // });
+
                 witClient.queryByWiql(query, projectId).then(
                     function(queryByWiqlResult) {  
                         var idsArr=new Array(queryByWiqlResult.workItems.length);
@@ -212,7 +231,7 @@ function updateVisibility(element){
     {
         case 'comments':
             changeDisplayByClassName("showHideFields","none");
-            changeDisplayByClassName("showHideSpecialField","flex");
+            changeDisplayByClassName("showHideSpecialField","block");
             appInsights.trackEvent({name:"FilterComments"});
             
             break;

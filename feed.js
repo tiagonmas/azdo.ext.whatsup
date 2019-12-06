@@ -127,6 +127,7 @@ function createfieldsChangedHTML(item)
 {   
     var html=[];
     var fields=item.fields;
+    var countFieldsShown=0;
     html.push("<div class=\"divTable\"><div class=\"divTableBody\">");
     html.push("<div class=\"divTableHeading\"><div class=\"divTableCell\">Field</div><div class=\"divTableCell\">Old value</div><div class=\"divTableCell\">New value</div></div>");
     var fields=getKeys(item.fields);
@@ -139,6 +140,7 @@ function createfieldsChangedHTML(item)
             else 
             {
                 html.push("<div class=\"divTableRow\">")    
+                countFieldsShown++;
             }
             
             html.push("<div class=\"divTableCell\">"+field+"</div>");
@@ -167,6 +169,7 @@ function createfieldsChangedHTML(item)
             html.push("</div>");
      });
     html.push("</div></div>");
+    if (countFieldsShown==0) {return "Changes were only on special system fields that are hidden";}
     return html.join("\n");
 }
 
@@ -191,15 +194,27 @@ function compareTimestamp( a, b ) {
     return 0;
   }
 
-  function revoveItemsBeforeDate(itemArr,_dateFilter){
+  function removeItemsBeforeDate(itemArr,_dateFilter){
     var retArr=[];
     if (_dateFilter==null){return itemArr;}
 
     _dateFilterTimeStamp=toTimestamp(_dateFilter);
     try{
         itemArr.forEach(element => {
+            if(!element.hasOwnProperty("timestamp"))
+            {
+                if(element.hasOwnProperty("fields")&& element.fields["System.ChangedDate"]!==undefined){
+                    Object.defineProperty(element, 'timestamp', { value: toTimestamp(element.fields["System.ChangedDate"].newValue) } ); 
+                }
+                else {
+                    Object.defineProperty(element, 'timestamp', { value: toTimestamp(element.revisedDate) } ); 
+
+                }
+            }
+
             if(element.timestamp>_dateFilterTimeStamp)
-            {retArr.push(element);}
+            {retArr.push(element);}            
+
         });
     }
     catch(err){console.log("err "+ err);}
@@ -228,10 +243,8 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName,_dateFilter)
                 
                 var updates=FlattenArr(values);
                 console.log("Got updates:"+updates.length);
-                updates=revoveItemsBeforeDate(updates,_dateFilter);
+                updates=removeItemsBeforeDate(updates,_dateFilter);
                 copyProperties(_idsArr,updates);
-                //Sort by date (timestamp)
-                //updates.sort((a,b) => (a.timestamp > b.timestamp) ? 0 : ((b.timestamp > a.timestamp) ? -1 : 1));
                 updates.sort(compareTimestamp);
                 resolve(updates);
             }).catch(error => 
