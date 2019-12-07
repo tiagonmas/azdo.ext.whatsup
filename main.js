@@ -109,11 +109,7 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                 console.log("DateFilter combo is "+dateFilter.value+" and query="+query.query);
                 //https://docs.microsoft.com/en-us/azure/devops/extend/reference/client/api/tfs/workitemtracking/restclient/workitemtrackinghttpclient2_2?view=azure-devops#method_queryById
                 //https://docs.microsoft.com/en-us/azure/devops/extend/reference/client/api/tfs/workitemtracking/restclient/workitemtrackinghttpclient2_2?view=azure-devops#method_queryById
-                // witClient.queryById("3397ce13-7f0f-4737-a453-820bb890c37e",projectId).then(function(foo){
-                //     console.log("queryById"+foo);
-                // },function(bar){
-                //     console.log("queryById rejected"+bar);
-                // });
+
 
                 witClient.queryByWiql(query, projectId).then(
                     function(queryByWiqlResult) {  
@@ -153,8 +149,6 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
 
 
                                     try{
-                                        
-                                        //var contriArray=contributors.values().toArray();
                                         var contriArray=ConvertMaptoArray(contributors);
                                         $('#contributors').append(contriArray.map(function (item) {
                                             return contributorsTpl.map(render(item)).join('');
@@ -167,7 +161,7 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
 
                                     $('#list-comment-items').append(updates.map(function (item) {
                                         var myItemhtml;
-                                        if (item.hasOwnProperty("fields")){
+                                        if (item.hasOwnProperty("fields") && item.countNormalFields>0){
                                             var myfields=item.fields;
                                             if(myfields.hasOwnProperty("System.History")){
                                                 myItemhtml=commentTpl.map(render(item)).join('');

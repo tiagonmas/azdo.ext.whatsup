@@ -62,7 +62,7 @@ function addContributor(contributor){
 function copyProperties(idsArr,updates)
 {
     updates.forEach(function(item) {
-        addContributor(item.revisedBy);
+        
         var idItem=idsArr.find(x => x.id === item.workItemId);
         if (idItem==null) 
             {console.log("Error id not found:" + item.id);}
@@ -79,8 +79,17 @@ function copyProperties(idsArr,updates)
                 Object.defineProperty(item, 'timestamp', { value: toTimestamp(item.revisedDate) } ); 
                 Object.defineProperty(item, 'datePassedDesc', { value: GetDateDiffDescriptionVsNow(item.revisedDate) } );
             }
-            Object.defineProperty(item, 'fieldsChangedHTML', { value: createfieldsChangedHTML(item) } ); 
+            var fieldsChangedHTML=createfieldsChangedHTML(item);
+
+            Object.defineProperty(item, 'fieldsChangedHTML', { value: fieldsChangedHTML.HTML } ); 
+            Object.defineProperty(item, 'countNormalFields', { value: fieldsChangedHTML.countNormalFields } ); 
+            Object.defineProperty(item, 'countSpecialFields', { value: fieldsChangedHTML.countSpecialFields } ); 
+
+            if (fieldsChangedHTML.countNormalFields>0)
+            {addContributor(item.revisedBy);    }
         }
+
+
     });
     
 }
@@ -127,7 +136,8 @@ function createfieldsChangedHTML(item)
 {   
     var html=[];
     var fields=item.fields;
-    var countFieldsShown=0;
+    var countNormalFields=0;
+    var countSpecialFields=0;
     html.push("<div class=\"divTable\"><div class=\"divTableBody\">");
     html.push("<div class=\"divTableHeading\"><div class=\"divTableCell\">Field</div><div class=\"divTableCell\">Old value</div><div class=\"divTableCell\">New value</div></div>");
     var fields=getKeys(item.fields);
@@ -135,12 +145,13 @@ function createfieldsChangedHTML(item)
     {
             if (SpecialFields.includes(field))
             {
-                html.push("<div class=\"divTableRow showHideSpecialField\">")   
+                html.push("<div class=\"divTableRow showHideSpecialField\">");
+                countSpecialFields++;
             }
             else 
             {
-                html.push("<div class=\"divTableRow\">")    
-                countFieldsShown++;
+                html.push("<div class=\"divTableRow\">");
+                countNormalFields++;
             }
             
             html.push("<div class=\"divTableCell\">"+field+"</div>");
@@ -169,8 +180,14 @@ function createfieldsChangedHTML(item)
             html.push("</div>");
      });
     html.push("</div></div>");
-    if (countFieldsShown==0) {return "Changes were only on special system fields that are hidden";}
-    return html.join("\n");
+
+    var retObj={
+        countNormalFields:countNormalFields,
+        countSpecialFields:countSpecialFields,
+        HTML: html.join("\n")
+    };
+
+    return retObj;
 }
 
 
