@@ -35,9 +35,12 @@
 			</script>
 			<!--End Contributors Template-->
 			<span id="contributors">
-					<!-- <button class="avatar-button cursor-hover-card" id="resetToAll" onClick="filterByContributor_click(this.id)">ALL</button>	 -->
-
-					<button class="avatar-button cursor-hover-card" id="resetToAll" onClick="filterByContributor_click(this.id)"><span aria-hidden="true" class="keyword-filter-icon prefix bolt-textfield-icon bolt-textfield-no-text flex-noshrink fabric-icon ms-Icon--ClearFilter"></span></button>
+					<button class="avatar-button cursor-hover-card" id="resetToAll" onClick="filterByContributor_click(this.id)">
+							<i class="ms-Icon ms-Icon--ClearFilter" aria-hidden="true"></i>
+							
+							<!-- <img class="avatar-button-image" src="https://tasalpineskihouse.visualstudio.com/_apis/GraphProfile/MemberAvatars/aad.NTM0Yjg3OGMtN2IzNy03NzA0LThhZGItZDM4ZmY3MTI0NmQ4" alt="Reset" title="Rest"> -->
+						<!-- <span aria-hidden="true" class="keyword-filter-icon prefix bolt-textfield-icon bolt-textfield-no-text flex-noshrink fabric-icon ms-Icon--ClearFilter"></span> -->
+					</button>
 			</span>
 			</div>
 		</div>
@@ -57,9 +60,8 @@
 				<option value="somefields">only most important updates</option>
 				<option value="all">all field changes and comments</option>
 				<option value="comments">only comments and no field changes</option>
-				
 			</select>
-			
+			<br>Version <span id="version"></span>
 		</div>
 		
 	</div>
@@ -110,7 +112,7 @@
 							<div class="comment-item-right">
 								<div class="wit-comment-viewer">
 									<div class="comment-header"><div class="comment-header-left"><span class="user-display-name">${revisedBy.displayName}</span>
-										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">changed fields ${datePassedDesc} regarding </span><span class="user-display-name"><a href="${workItemURL}"  target="_top">${title}</A></span></div></div>
+										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">changed fields ${datePassedDesc} regarding </span><span class="user-display-name"><a href="${workItemURL}"  target="_blank">${title}</A></span></div></div>
 										<div class="comment-header-right"><div class="comment-toolbar" role="menubar">
 										<!-- <div class="comment-reaction-button comment-toolbar-reaction-button bolt-expandable-button inline-flex-row">
 											<button aria-expanded="false" aria-haspopup="true" aria-label="Add your reaction" aria-setsize="1" aria-posinset="1" class="icon-only bolt-button bolt-icon-button enabled subtle icon-only bolt-focus-treatment" data-focuszone="focuszone-3" data-is-focusable="true" role="menuitem" tabindex="0" type="button"> 

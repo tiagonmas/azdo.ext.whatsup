@@ -1,6 +1,7 @@
 var LastExecDate //Last time the extension was executed. Saved in settings.
 var filterFromDate=new Date() //Date when we should start showing events from 
 var filteredUser="";
+var extVersion;
 appInsights.startTrackPage("Page");
 
 
@@ -47,12 +48,13 @@ function GetSetting(setting){
 }
 VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authentication/Services"], function (VSS_Service, TFS_Wit_WebApi,VSS_Auth_Service) {
     var context = VSS.getWebContext();
+    extVersion=VSS.getExtensionContext().version;
     var projectId = context.project.id;
     var projectName = context.project.name;
     var HostName = context.host.name;
     var HostUri = context.host.uri;
 
-    
+    $("#version").html(extVersion);
 
     VSS.getAccessToken().then(function(token){
             return VSS_Auth_Service.authTokenManager.getAuthorizationHeader(token);
@@ -109,7 +111,11 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                 console.log("DateFilter combo is "+dateFilter.value+" and query="+query.query);
                 //https://docs.microsoft.com/en-us/azure/devops/extend/reference/client/api/tfs/workitemtracking/restclient/workitemtrackinghttpclient2_2?view=azure-devops#method_queryById
                 //https://docs.microsoft.com/en-us/azure/devops/extend/reference/client/api/tfs/workitemtracking/restclient/workitemtrackinghttpclient2_2?view=azure-devops#method_queryById
-
+                witClient.queryById("3397ce13-7f0f-4737-a453-820bb890c37e",projectId).then(function(foo){
+                   console.log("queryById"+foo);
+                },function(bar){
+                    console.log("queryById rejected"+bar);
+                });
 
                 witClient.queryByWiql(query, projectId).then(
                     function(queryByWiqlResult) {  
