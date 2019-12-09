@@ -2,6 +2,8 @@ var LastExecDate //Last time the extension was executed. Saved in settings.
 var filterFromDate=new Date() //Date when we should start showing events from 
 var filteredUser="";
 var extVersion;
+var sourceWits;
+var queryId;
 appInsights.startTrackPage("Page");
 
 
@@ -64,30 +66,50 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
             {
                 var witClient = VSS_Service.getCollectionClient(TFS_Wit_WebApi.WorkItemTrackingHttpClient);
                 
-                //Get exisiting settings
-                GetSetting("FilterSetting").then(function(_filterSetting){
-                    if (_filterSetting==null){
+                //Get Settings
+                var promiseSettings = Promise.all([GetSetting("FilterSetting"), GetSetting("LastExecDate"), GetSetting("DateFilter"), GetSetting("SourceSetting"),GetSetting("QueryId")]);
+                promiseSettings.then(function(data) {
+                    //FilterSetting
+                    if (data[0]==null){
                         _filterSetting="somefields";
                     }
-                    console.log("FilterSetting="+_filterSetting);
-                    filterSelection.value=_filterSetting;});
+                    console.log("FilterSetting="+data[0]);
+                    filterSelection.value=data[0];
 
-                    
-                GetSetting("LastExecDate").then(function(_lastExecDate){
-                    LastExecDate=_lastExecDate;
-                    SaveSetting("LastExecDate",new Date());});
+                    //LastExecDate
+                    LastExecDate=data[1];
+                    SaveSetting("LastExecDate",new Date());
 
-                //To do: All the getsettings should wait for completion before moving forward. promise all...
-                GetSetting("DateFilter").then(function(_dateFilter){
-                    if (_dateFilter==null){
-                        _dateFilter="seven";
+                    //DateFilter
+                    if (data[2]==null){
+                        data[2]="seven";
                     }
-                    console.log("DateFilter="+_dateFilter);
-                    dateFilter.value=_dateFilter;
+                    console.log("DateFilter="+data[2]);
+                    dateFilter.value=data[2];
+
+                    //SourceSetting
+                    if (data[3]==null){
+                        data[3]="source_following";
+                        SaveSetting("SourceSetting","source_following");
+                        sourceWits="source_following";
+                    }
+                    else {sourceWits=data[3];}
+                    console.log("SourceSetting="+data[3]);
+                    document.getElementById(data[3]).checked = true; 
+                    
+                    
+                    //QueryId
+                    if (data[4]!=null){
+                        document.getElementById("queryId").value = data[4];   
+                        
+                    }
+                    queryId=data[4];
+                    console.log("QueryId="+data[4]);
+                    
+                    
                 }).then(function(){
 
                 var query;
-                
                 switch(dateFilter.value){
                     case 'all':
                         query = {query: "SELECT [System.Id] FROM workitems WHERE [System.Id] In (@Follows) AND [System.State] NOT IN ('Closed','Inactive','Completed') ORDER BY [System.ChangedDate] DESC" };
@@ -107,20 +129,39 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                             break;
         
                 }
+                
+                var queryPromise;
 
-                console.log("DateFilter combo is "+dateFilter.value+" and query="+query.query);
-                //https://docs.microsoft.com/en-us/azure/devops/extend/reference/client/api/tfs/workitemtracking/restclient/workitemtrackinghttpclient2_2?view=azure-devops#method_queryById
-                //https://docs.microsoft.com/en-us/azure/devops/extend/reference/client/api/tfs/workitemtracking/restclient/workitemtrackinghttpclient2_2?view=azure-devops#method_queryById
-                witClient.queryById("3397ce13-7f0f-4737-a453-820bb890c37e",projectId).then(function(foo){
-                   console.log("queryById"+foo);
-                },function(bar){
-                    console.log("queryById rejected"+bar);
-                });
+                switch(sourceWits){
+                    case "source_following":
+                        queryPromise=witClient.queryByWiql(query, projectId);
+                        console.log("DateFilter combo is "+dateFilter.value+" and query="+query.query);
+                        break;
+                    case "source_query":
+                        queryPromise=witClient.queryById(queryId,projectId);
+                        console.log("queryID="+queryId);
+                        break;
+                    default:
+                        console.log("ERROR Invalid sourceWits");
+                }
 
-                witClient.queryByWiql(query, projectId).then(
-                    function(queryByWiqlResult) {  
-                        var idsArr=new Array(queryByWiqlResult.workItems.length);
-                        if (queryByWiqlResult.workItems.length==0)
+                
+                queryPromise.then(
+                    function(queryResult) {  
+                        var idsArr;
+
+                        if(queryResult.queryResultType==1){
+                            //https://docs.microsoft.com/en-us/rest/api/azure/devops/wit/Wiql/Query%20By%20Wiql?view=azure-devops-rest-5.1#queryresulttype
+                            idsArr=new Array(queryResult.workItems.length);
+                        }
+                        else{
+                            idsArr=new Array(queryResult.workItemRelations.length);
+                        }
+
+                        
+
+
+                        if (idsArr.length==0)
                         {
                             appInsights.trackEvent({name: "noContent"});
                             document.getElementById("nocontent").style.visibility="visible" ;
@@ -130,14 +171,27 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                         }
                         else {
                             appInsights.trackEvent({name: "Content"});
-                            appInsights.trackMetric("FollowingItems",queryByWiqlResult.workItems.length );
+                            appInsights.trackMetric("FollowingItems",idsArr.length );
                             document.getElementById("nocontent").style.display="none" ;
                             document.getElementById("headbox").style.visibility="visible" ;
                         }
 
-                        for (var i=0;i<queryByWiqlResult.workItems.length;i++){
-                            idsArr[i]=queryByWiqlResult.workItems[i].id
+
+                        for (var i=0;i<idsArr.length;i++){
+                            if(queryResult.queryResultType==1){
+                             
+                                idsArr[i]=queryResult.workItems[i].id
+                            }
+                            else{
+                                idsArr[i]=queryResult.workItemRelations[i].target.id;
+                            }
+                            
+
                         }								
+
+                        let removeDups = (ids) => ids.filter((v,i) => ids.indexOf(v) === i)
+                        removeDups(idsArr);
+
                         return idsArr;
                     }).then(function(idsArr){
                         if (idsArr.length>0)
@@ -213,7 +267,13 @@ function removeStyleByClassName(elementClass){
         });
 }	
 
-
+function onSaveQueryId(){
+    var _queryId=document.getElementById("queryId").value;
+    SaveSetting("QueryId",_queryId).then(function(){window.location.reload();});;
+}
+function onchangeSource(element){
+    SaveSetting("SourceSetting",element.value);
+}
 function onchangeDateFilter(element){
     SaveSetting("DateFilter",element).then(function(){window.location.reload();});
     

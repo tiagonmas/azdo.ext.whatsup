@@ -23,16 +23,17 @@
 <div id="maincontent">
 		
 		<h1 class="vss-HubTitle"><div class="vss-HubTitle--titleText">Latest updates on the work items you're following <i class="ms-Icon ms-Icon--Feedback" aria-hidden="true"></i></div></h1>
-	<div id="headbox" style="visibility: hidden;" class="vss-FilterBar">
+	<div id="headbox"  class="vss-FilterBar">
 
 			<div class="rTable">
 					<div class="rTableRow">
 						<div class="rTableHead">Author</div>
-						<div class="rTableHead">Load items updated since</div>
-						<div class="rTableHead">Show</div>
+						<div class="rTableHead">Load items from</div>
+						<div class="rTableHead">Show items updated since</div>
+						<div class="rTableHead">View</div>
 					</div>
 					<div class="rTableRow">
-						<div class="rTableCell">
+						<div class="rTableCell leftcolumn">
 							<div class="contributors">
 			
 									<!--START Contributors TEMPLATE-->
@@ -48,6 +49,12 @@
 									</div>
 						</div>
 						<div class="rTableCell centercolumn" >
+							<input type="radio"  checked="checked" name="source" value="source_following" id="source_following" onchange="onchangeSource(this)">Following</input>
+							<br><input type="radio" name="source" value="source_query" id="source_query" onchange="onchangeSource(this)">Query</input>&nbsp;<input type="text" id="queryId"></input>
+							<br><button type="button" onclick="onSaveQueryId()">Save query id</button>
+							
+						</div>
+						<div class="rTableCell centercolumn" >
 							<select id="dateFilter" onchange="onchangeDateFilter(this.value)">
 							<option value='one'>Yesterday</option>
 							<option value='seven'>A week ago</option>
@@ -55,7 +62,7 @@
 							<option value='all'>I was born</option>
 							</select>
 							<br/>&nbsp;
-							<div id="feedbackContainer"><a href="https://github.com/tiagonmas/azdo.ext.whatsup/issues">Feedback</a></div>
+							<div id="feedbackContainer"><a href="https://github.com/tiagonmas/azdo.ext.whatsup/issues"  target="_blank">Feedback</a></div>
 						</div>
 						<div class="rTableCell rightcolumn">
 							<select id="filterSelection" onchange="onchangeShowFilter(this.value)" style="align-content:flex-end ;">
@@ -65,29 +72,12 @@
 								</select>
 							<br/>&nbsp;
 							<br/>&nbsp;
-							<div id="versionContainer"> <a href="https://marketplace.visualstudio.com/manage/publishers/tiagoandradeesilva">Version <span id="version"></span></a></div>
+							<div id="versionContainer"> <a href="https://marketplace.visualstudio.com/manage/publishers/tiagoandradeesilva" target="_blank">Version <span id="version"></span></a></div>
 						</div>
 					</div>
-					<!-- <div class="rTableRow">
-						<div class="rTableCell"></div>
-						<div class="rTableCell" id="feedbackContainer"><a href="https://github.com/tiagonmas/azdo.ext.whatsup/issues">Feedback</a></div>
-						<div class="rTableCell" id="versionContainer"> <a href="https://marketplace.visualstudio.com/manage/publishers/tiagoandradeesilva">Version <span id="version"></span></a></div>
-					</div> -->
+
 			</div>
 
-		<!-- <div id="leftbox">
-			
-			
-
-		</div>
-		<div id="centerbox">
-
-		</div>
-		<div id="rightbox">
-			Show
-
-		</div> -->
-		
 	</div>
 	<div id="nocontent" style="visibility: hidden;">
 		<h2>Welcome!</h2>

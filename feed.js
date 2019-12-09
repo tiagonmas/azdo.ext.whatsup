@@ -217,7 +217,9 @@ function compareTimestamp( a, b ) {
 
     _dateFilterTimeStamp=toTimestamp(_dateFilter);
     try{
-        itemArr.forEach(element => {
+
+        for(var i=0; i<itemArr.length;i++){
+            element=itemArr[i];
             if(!element.hasOwnProperty("timestamp"))
             {
                 if(element.hasOwnProperty("fields")&& element.fields["System.ChangedDate"]!==undefined){
@@ -232,7 +234,24 @@ function compareTimestamp( a, b ) {
             if(element.timestamp>_dateFilterTimeStamp)
             {retArr.push(element);}            
 
-        });
+        }
+
+        // itemArr.forEach(element => {
+        //     if(!element.hasOwnProperty("timestamp"))
+        //     {
+        //         if(element.hasOwnProperty("fields")&& element.fields["System.ChangedDate"]!==undefined){
+        //             Object.defineProperty(element, 'timestamp', { value: toTimestamp(element.fields["System.ChangedDate"].newValue) } ); 
+        //         }
+        //         else {
+        //             Object.defineProperty(element, 'timestamp', { value: toTimestamp(element.revisedDate) } ); 
+
+        //         }
+        //     }
+
+        //     if(element.timestamp>_dateFilterTimeStamp)
+        //     {retArr.push(element);}            
+
+        // });
     }
     catch(err){console.log("err "+ err);}
     return retArr;
