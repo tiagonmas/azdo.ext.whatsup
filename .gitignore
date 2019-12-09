@@ -4,6 +4,6 @@ dist/
 out/
 *.zip
 *.vsix
-
+configs/
 # macOS
 .DS_Store
