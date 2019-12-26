@@ -18,37 +18,9 @@ VSS.ready(function() {
 
 });
 
-function SaveSetting(setting,value){
-    return new Promise(function(resolve, reject) {
-        try
-        {
-            VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) {
-            // Set value in user scope
-            dataService.setValue(setting, value, {scopeType: "User"}).then(function(value) {
-                    resolve();
-                });
-            });
-        }
-        catch(Err){reject(Err);}
-    });
-}
-function GetSetting(setting){
-    return new Promise(function(resolve, reject) {
-        try
-        {
-            // Get data service
-            VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) {
-                    // Get value in user scope
-                    dataService.getValue(setting, {scopeType: "User"}).then(function(value) {
-                        resolve(value);
-                    });
-                });
-        }
-        catch(Err){reject(Err);}
-    });
 
-}
 VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authentication/Services"], function (VSS_Service, TFS_Wit_WebApi,VSS_Auth_Service) {
+    
     var context = VSS.getWebContext();
     extVersion=VSS.getExtensionContext().version;
     var projectId = context.project.id;
@@ -59,7 +31,7 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
     $("#version").html(extVersion);
 
     VSS.getAccessToken().then(function(token){
-        updateProgress(5);
+        
             return VSS_Auth_Service.authTokenManager.getAuthorizationHeader(token);
         }).then(function(authHeader){					
             
@@ -67,10 +39,12 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
             {
                 var witClient = VSS_Service.getCollectionClient(TFS_Wit_WebApi.WorkItemTrackingHttpClient);
                 
-                updateProgress(10);
+                VSS.notifyLoadSucceeded();
+
+                updateProgress(5);
                 loadSettings().then(function(){
 
-                updateProgress(15);
+                
                 var query;
                 switch(dateFilter.value){
                     case 'all':
@@ -111,7 +85,7 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                 queryPromise.then(
                     function(queryResult) {  
                         var idsArr;
-                        updateProgress(20);
+                        updateProgress(25);
                         if(queryResult.queryResultType==1){
                             //https://docs.microsoft.com/en-us/rest/api/azure/devops/wit/Wiql/Query%20By%20Wiql?view=azure-devops-rest-5.1#queryresulttype
                             idsArr=new Array(queryResult.workItems.length);
@@ -231,6 +205,36 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                 
 });
 
+function SaveSetting(setting,value){
+    return new Promise(function(resolve, reject) {
+        try
+        {
+            VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) {
+            // Set value in user scope
+            dataService.setValue(setting, value, {scopeType: "User"}).then(function(value) {
+                    resolve();
+                });
+            });
+        }
+        catch(Err){reject(Err);}
+    });
+}
+function GetSetting(setting){
+    return new Promise(function(resolve, reject) {
+        try
+        {
+            // Get data service
+            VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) {
+                    // Get value in user scope
+                    dataService.getValue(setting, {scopeType: "User"}).then(function(value) {
+                        resolve(value);
+                    });
+                });
+        }
+        catch(Err){reject(Err);}
+    });
+
+}
 function showError(msg){
     document.getElementById("headbox").style.visibility="visible";
     document.getElementById("loader").style.visibility="hidden";
@@ -242,8 +246,8 @@ function showError(msg){
 function loadSettings(){
     return new Promise(function(resolve, reject) {
         //Get Settings
-        var promiseSettings = Promise.all(
-            [GetSetting("FilterSetting").catch(error => { 
+
+        allProgress([GetSetting("FilterSetting").catch(error => { 
                 console.error("Error in GetSetting1"); })
             , GetSetting("LastExecDate").catch(error => { 
                 console.error("Error in GetSetting2"); })
@@ -253,8 +257,14 @@ function loadSettings(){
                 console.error("Error in GetSetting4"); })
             ,GetSetting("QueryId").catch(error => { 
                 console.error("Error in GetSetting5"); })
-            ]);
-        promiseSettings.then(function(data) {
+            ],
+            (p) => {
+                
+                //console.log("Update "+p+ "= "+(11+p.toFixed(0)/10));
+
+                updateProgress(7+p.toFixed(0)/10);
+ 
+        }).then(function(data) {
             //FilterSetting
             if (data[0]==null){
                 _filterSetting="somefields";

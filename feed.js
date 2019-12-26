@@ -271,8 +271,9 @@ function compareTimestamp( a, b ) {
 
   function updateProgress(progValue)
   {
+    console.log("updateProgress: "+progValue);
     const myBarElem = document.getElementById("myBar"); 
-    myBarElem.innerHTML=progValue + '%';
+    myBarElem.innerHTML="Loading "+progValue + '%';
     myBarElem.style.width = progValue + '%'; 
   }
 //Call Rest API's based on array of ID's 

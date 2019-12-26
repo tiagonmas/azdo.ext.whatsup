@@ -49,9 +49,9 @@
 									</div>
 						</div>
 						<div class="rTableCell centercolumn" >
-							<input type="radio"  checked="checked" name="source" value="source_following" id="source_following" onchange="onchangeSource(this)">Following</input>
-							<br><input type="radio" name="source" value="source_query" id="source_query" onchange="onchangeSource(this)">Query</input>&nbsp;<input type="text" id="queryId"></input>
-							<br><button type="button" onclick="onSaveQueryId()">Save query id</button>
+							<input type="radio"  checked="checked" name="source" value="source_following" id="source_following" onchange="onchangeSource(this)">Following items</input>
+							<br><input type="radio" name="source" value="source_query" id="source_query" onchange="onchangeSource(this)">Query id</input>&nbsp;<input type="text" id="queryId"></input>
+							<br><button type="button" onclick="onSaveQueryId()">Save preference and refresh</button>
 							
 						</div>
 						<div class="rTableCell centercolumn" >
@@ -80,7 +80,7 @@
 
 	</div>
 	<div id="myProgress">
-			<div id="myBar">5%</div>
+			<div id="myBar">Loading: 0%</div>
 		  </div>
 
 	<div class="error" id="errorDiv" style="visibility: hidden;">This is an error message</div> 
