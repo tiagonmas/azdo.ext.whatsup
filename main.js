@@ -66,48 +66,7 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
             {
                 var witClient = VSS_Service.getCollectionClient(TFS_Wit_WebApi.WorkItemTrackingHttpClient);
                 
-                //Get Settings
-                var promiseSettings = Promise.all([GetSetting("FilterSetting"), GetSetting("LastExecDate"), GetSetting("DateFilter"), GetSetting("SourceSetting"),GetSetting("QueryId")]);
-                promiseSettings.then(function(data) {
-                    //FilterSetting
-                    if (data[0]==null){
-                        _filterSetting="somefields";
-                    }
-                    console.log("FilterSetting="+data[0]);
-                    filterSelection.value=data[0];
-
-                    //LastExecDate
-                    LastExecDate=data[1];
-                    SaveSetting("LastExecDate",new Date());
-
-                    //DateFilter
-                    if (data[2]==null){
-                        data[2]="seven";
-                    }
-                    console.log("DateFilter="+data[2]);
-                    dateFilter.value=data[2];
-
-                    //SourceSetting
-                    if (data[3]==null){
-                        data[3]="source_following";
-                        SaveSetting("SourceSetting","source_following");
-                        sourceWits="source_following";
-                    }
-                    else {sourceWits=data[3];}
-                    console.log("SourceSetting="+data[3]);
-                    document.getElementById(data[3]).checked = true; 
-                    
-                    
-                    //QueryId
-                    if (data[4]!=null){
-                        document.getElementById("queryId").value = data[4];   
-                        
-                    }
-                    queryId=data[4];
-                    console.log("QueryId="+data[4]);
-                    
-                    
-                }).then(function(){
+                loadSettings().then(function(){
 
                 var query;
                 switch(dateFilter.value){
@@ -158,9 +117,6 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                             idsArr=new Array(queryResult.workItemRelations.length);
                         }
 
-                        
-
-
                         if (idsArr.length==0)
                         {
                             appInsights.trackEvent({name: "noContent"});
@@ -193,8 +149,15 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                         removeDups(idsArr);
 
                         return idsArr;
-                    }).then(function(idsArr){
-                        if (idsArr.length>0)
+                    },function(Err){
+                        console.error("error loading query "+Err);
+                        showError("error loading query"+Err);
+                        return null;
+                    }
+                    
+                    ).then(function(idsArr){
+
+                        if (idsArr!=null && idsArr.length>0)
                         {return witClient.getWorkItems(idsArr, ["System.Title"]);}
                         else {return [];}
                     }).then(function(itemsArr){
@@ -216,7 +179,8 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                                         contriArray.sort(compareContributions);                         
 
                                     }catch(Err){
-                                        console.log("Err:"+Err);
+                                        console.error("Err:"+Err);
+                                        showError("Err:"+e);
                                     }
 
                                     $('#list-comment-items').append(updates.map(function (item) {
@@ -236,24 +200,98 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
 
                                     appInsights.stopTrackPage("Page");
                                 },function(err) {
-                                    console.log("========ERROR: "+err);
+                                    console.error("========ERROR: "+err);
+                                    showError("ERROR:"+e);
                                     appInsights.trackException(err, "ErrFinal");
                                 });
 
                         }
-                        VSS.notifyLoadSucceeded();
+                        
+                    }).catch(function(e) { 
+                        showError("err23"+e);
+                        console.error('err23',e) 
+                        
                     });
-                })
-
+                }).catch(function(e) { 
+                    showError("err24"+e);
+                    console.error('err24',e) 
+                });
+                VSS.notifyLoadSucceeded();
             }catch(err)
             {
-                console.log("error queryByWiql:"+err);
+                console.error("error queryByWiql:"+err);
+                showError("error queryByWiql"+err);
                 appInsights.trackException(err, "ErrqueryByWiql");
+                VSS.notifyLoadSucceeded();
             }
         });
                 
 });
 
+function showError(msg){
+    document.getElementById("headbox").style.visibility="visible";
+    document.getElementById("loader").style.visibility="hidden";
+    document.getElementById("errorDiv").innerHTML=msg;
+}
+
+
+
+function loadSettings(){
+    return new Promise(function(resolve, reject) {
+        //Get Settings
+        var promiseSettings = Promise.all(
+            [GetSetting("FilterSetting").catch(error => { 
+                console.error("Error in GetSetting1"); })
+            , GetSetting("LastExecDate").catch(error => { 
+                console.error("Error in GetSetting2"); })
+            , GetSetting("DateFilter").catch(error => { 
+                console.error("Error in GetSetting3"); })
+            , GetSetting("SourceSetting").catch(error => { 
+                console.error("Error in GetSetting4"); })
+            ,GetSetting("QueryId").catch(error => { 
+                console.error("Error in GetSetting5"); })
+            ]);
+        promiseSettings.then(function(data) {
+            //FilterSetting
+            if (data[0]==null){
+                _filterSetting="somefields";
+            }
+            console.log("FilterSetting="+data[0]);
+            filterSelection.value=data[0];
+
+            //LastExecDate
+            LastExecDate=data[1];
+            SaveSetting("LastExecDate",new Date());
+
+            //DateFilter
+            if (data[2]==null){
+                data[2]="seven";
+            }
+            console.log("DateFilter="+data[2]);
+            dateFilter.value=data[2];
+
+            //SourceSetting
+            if (data[3]==null){
+                data[3]="source_following";
+                SaveSetting("SourceSetting","source_following");
+                sourceWits="source_following";
+            }
+            else {sourceWits=data[3];}
+            console.log("SourceSetting="+data[3]);
+            document.getElementById(data[3]).checked = true; 
+            
+            
+            //QueryId
+            if (data[4]!=null){
+                document.getElementById("queryId").value = data[4];   
+                
+            }
+            queryId=data[4];
+            console.log("QueryId="+data[4]);
+            resolve();
+        })
+    });
+}
 function changeDisplayByClassName(elementClass,newValue){
     
         Array.prototype.forEach.call(document.getElementsByClassName(elementClass),element => {	

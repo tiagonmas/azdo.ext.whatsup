@@ -17,13 +17,13 @@
 	<link rel="stylesheet" type="text/css" href="https://cdn.vsassets.io/v/M159_20191103.2/_ext/ms.vss-features/ui-hub-content/ms.vss-features.ui-hub-content.min.css"/>
 	<link rel="stylesheet" type="text/css" href="https://cdn.vsassets.io/v/M159_20191105.2/_ext/ms.vss-features/ui-core-content/ms.vss-features.ui-core-content.min.css" />
 	<link rel="stylesheet"  type="text/css" href="https://cdn.vsassets.io/v/M159_20191103.2/_ext/ms.vss-features/ui-filterbar-content/ms.vss-features.ui-filterbar-content.min.css"/>
-	<!-- <link rel="stylesheet"  type="text/css" href="https://cdn.vsassets.io/v/M159_20191105.2/_cssbundles/Default/vss-bundle-asynccss-v6KwFzq3QQhA7byNsUSU2h2ryaO3cdx0qoC9706cIT9k="/> -->
+
  </head>
 <body style="overflow: visible;" onload="pageLoaded()">    
 <div id="maincontent">
 		
-		<h1 class="vss-HubTitle"><div class="vss-HubTitle--titleText">Latest updates on the work items you're following <i class="ms-Icon ms-Icon--Feedback" aria-hidden="true"></i></div></h1>
-	<div id="headbox"  class="vss-FilterBar">
+	<h1 class="vss-HubTitle"><div class="vss-HubTitle--titleText">Latest updates on the work items you're following <i class="ms-Icon ms-Icon--Feedback" aria-hidden="true"></i></div></h1>
+	<div id="headbox"  class="vss-FilterBar" style="visibility: hidden;">
 
 			<div class="rTable">
 					<div class="rTableRow">
@@ -79,6 +79,9 @@
 			</div>
 
 	</div>
+	<div class="loader" id="loader"></div> 
+	<div class="error" id="errorDiv">This is an error message</div> 
+
 	<div id="nocontent" style="visibility: hidden;">
 		<h2>Welcome!</h2>
 		<br>Here you'll see a feed of the changes to the work items you're following (based on filter above). There is nothing to show for now. It could be your not currently following anything or there are no recent updates on the items you're following.
