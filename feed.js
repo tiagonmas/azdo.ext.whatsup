@@ -256,6 +256,25 @@ function compareTimestamp( a, b ) {
     catch(err){console.log("err "+ err);}
     return retArr;
   }
+
+  function allProgress(proms, progress_cb) {
+    let d = 0;
+    progress_cb(0);
+    for (const p of proms) {
+      p.then(()=> {    
+        d ++;
+        progress_cb( (d * 100) / proms.length );
+      });
+    }
+    return Promise.all(proms);
+  }
+
+  function updateProgress(progValue)
+  {
+    const myBarElem = document.getElementById("myBar"); 
+    myBarElem.innerHTML=progValue + '%';
+    myBarElem.style.width = progValue + '%'; 
+  }
 //Call Rest API's based on array of ID's 
 function fetchContent(_idsArr,_authHeader,_hostName,_projectName,_dateFilter)
 {
@@ -275,14 +294,23 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName,_dateFilter)
             for (var i=0;i<_idsArr.length;i++){
                 promiseArr[i]=get(getUpdateRestApiUrl(hostName,projectName,_idsArr[i].id));
             }
-            Promise.all(promiseArr).then(function(values) {
-                
+
+            
+            allProgress(promiseArr,
+                (p) => {
+                    //console.log(`% Done = ${p.toFixed(2)}`);
+                    updateProgress(50+p.toFixed(0)/2);
+     
+            })
+            //Promise.all(promiseArr)
+            .then(function(values) {
                 var updates=FlattenArr(values);
                 console.log("Got updates:"+updates.length);
                 updates=removeItemsBeforeDate(updates,_dateFilter);
                 copyProperties(_idsArr,updates);
                 updates.sort(compareTimestamp);
                 resolve(updates);
+                
             }).catch(error => 
                 reject(error));
         }

@@ -59,6 +59,7 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
     $("#version").html(extVersion);
 
     VSS.getAccessToken().then(function(token){
+        updateProgress(5);
             return VSS_Auth_Service.authTokenManager.getAuthorizationHeader(token);
         }).then(function(authHeader){					
             
@@ -66,8 +67,10 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
             {
                 var witClient = VSS_Service.getCollectionClient(TFS_Wit_WebApi.WorkItemTrackingHttpClient);
                 
+                updateProgress(10);
                 loadSettings().then(function(){
 
+                updateProgress(15);
                 var query;
                 switch(dateFilter.value){
                     case 'all':
@@ -108,7 +111,7 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                 queryPromise.then(
                     function(queryResult) {  
                         var idsArr;
-
+                        updateProgress(20);
                         if(queryResult.queryResultType==1){
                             //https://docs.microsoft.com/en-us/rest/api/azure/devops/wit/Wiql/Query%20By%20Wiql?view=azure-devops-rest-5.1#queryresulttype
                             idsArr=new Array(queryResult.workItems.length);
@@ -141,10 +144,8 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                             else{
                                 idsArr[i]=queryResult.workItemRelations[i].target.id;
                             }
-                            
-
                         }								
-
+                        updateProgress(30);
                         let removeDups = (ids) => ids.filter((v,i) => ids.indexOf(v) === i)
                         removeDups(idsArr);
 
@@ -157,10 +158,12 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                     
                     ).then(function(idsArr){
 
+                        updateProgress(35);
                         if (idsArr!=null && idsArr.length>0)
                         {return witClient.getWorkItems(idsArr, ["System.Title"]);}
                         else {return [];}
                     }).then(function(itemsArr){
+                        updateProgress(40);
                         if (itemsArr.length>0)
                         {fetchContent(itemsArr,authHeader,HostName,projectName,filterFromDate).
                                 then(function(updates){
@@ -197,7 +200,7 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                                     }));
                                 
                                     updateVisibility(document.getElementById("filterSelection").value);
-
+                                    document.getElementById("myProgress").style.display="none";
                                     appInsights.stopTrackPage("Page");
                                 },function(err) {
                                     console.error("========ERROR: "+err);
