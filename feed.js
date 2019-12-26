@@ -271,7 +271,7 @@ function compareTimestamp( a, b ) {
 
   function updateProgress(progValue)
   {
-    console.log("updateProgress: "+progValue);
+    //console.log("updateProgress: "+progValue);
     const myBarElem = document.getElementById("myBar"); 
     myBarElem.innerHTML="Loading "+progValue + '%';
     myBarElem.style.width = progValue + '%'; 
@@ -300,7 +300,7 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName,_dateFilter)
             allProgress(promiseArr,
                 (p) => {
                     //console.log(`% Done = ${p.toFixed(2)}`);
-                    updateProgress(50+p.toFixed(0)/2);
+                    updateProgress(50+Math.floor(p.toFixed(0)/2));
      
             })
             //Promise.all(promiseArr)
