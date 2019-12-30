@@ -49,8 +49,8 @@
 									</div>
 						</div>
 						<div class="rTableCell centercolumn" >
-							<input type="radio"  checked="checked" name="source" value="source_following" id="source_following" onchange="onchangeSource(this)">Following items</input>
-							<br><input type="radio" name="source" value="source_query" id="source_query" onchange="onchangeSource(this)">Query id</input>&nbsp;<input type="text" id="queryId"></input>
+							<input type="radio"  checked="checked" name="source" value="source_following" id="source_following" onchange="onchangeSource(this)"><A HREF="https://docs.microsoft.com/en-us/azure/devops/boards/work-items/follow-work-items?view=azure-devops" TARGET="_blank">Items you're following</A></input>
+							<br><input type="radio" name="source" value="source_query" id="source_query" onchange="onchangeSource(this)"><a href="https://stackoverflow.com/questions/46272287/vsts-get-id-of-stored-queries" target="_blank">Query id</a></input>&nbsp;<input type="text" id="queryId"></input>
 							<br><button type="button" onclick="onSaveQueryId()">Save preference and refresh</button>
 							
 						</div>
@@ -87,9 +87,9 @@
 
 	<div id="nocontent" style="visibility: hidden;">
 		<h2>Welcome!</h2>
-		<br>Here you'll see a feed of the changes to the work items you're following (based on filter above). There is nothing to show for now. It could be your not currently following anything or there are no recent updates on the items you're following.
-		Click the "Follow" button on your favorite work items and come back to this page to see their updates, or change the "Load items updated since" filter.
-		<p>Sample image:</p>
+		<br>Here you'll see a feed of the changes in the work items you're following or based on a query you selected (and based on filters above). There is nothing to show for now. 
+		Click the "Follow" button on your favorite work items and come back to this page to see their updates, or change the "Load items updated since" filter, or set up a query as the source of the items to load.
+		<p>How to follow a work item:</p>
 		<br><img src="https://docs.microsoft.com/en-us/azure/devops/boards/work-items/_img/follow-work/follow-work-item.png?view=azure-devops"/>
 		<p>More information: <A href="https://docs.microsoft.com/en-us/azure/devops/boards/work-items/follow-work-items?view=azure-devops">Tutorial: Follow a user story, bug, issue, or other work item or pull request</A>
 	</div>
@@ -109,10 +109,10 @@
 									<div class="comment-header"><div class="comment-header-left"><span class="user-display-name">${revisedBy.displayName}</span>
 										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">commented ${datePassedDesc} regarding </span><span class="user-display-name"><a href="${workItemURL}" target="_blank">${title}</A></span></div></div>
 										<div class="comment-header-right"><div class="comment-toolbar" role="menubar">
-										<!-- <div class="comment-reaction-button comment-toolbar-reaction-button bolt-expandable-button inline-flex-row">
+										<div class="comment-reaction-button comment-toolbar-reaction-button bolt-expandable-button inline-flex-row">
 											<button aria-expanded="false" aria-haspopup="true" aria-label="Add your reaction" aria-setsize="1" aria-posinset="1" class="icon-only bolt-button bolt-icon-button enabled subtle icon-only bolt-focus-treatment" data-focuszone="focuszone-3" data-is-focusable="true" role="menuitem" tabindex="0" type="button">
 											<span aria-hidden="true" class="left-icon flex-noshrink fabric-icon ms-Icon--AddReaction medium"></span></button>
-											</div> -->
+											</div>
 										</div></div>
 									</div>
 									<div class="comment-content" data-comment-id="${id}">
@@ -134,10 +134,10 @@
 									<div class="comment-header"><div class="comment-header-left"><span class="user-display-name">${revisedBy.displayName}</span>
 										<div class="ms-TooltipHost host_74a2b74b"><span class="comment-timestamp">changed fields ${datePassedDesc} regarding </span><span class="user-display-name"><a href="${workItemURL}"  target="_blank">${title}</A></span></div></div>
 										<div class="comment-header-right"><div class="comment-toolbar" role="menubar">
-										<!-- <div class="comment-reaction-button comment-toolbar-reaction-button bolt-expandable-button inline-flex-row">
+										<div class="comment-reaction-button comment-toolbar-reaction-button bolt-expandable-button inline-flex-row">
 											<button aria-expanded="false" aria-haspopup="true" aria-label="Add your reaction" aria-setsize="1" aria-posinset="1" class="icon-only bolt-button bolt-icon-button enabled subtle icon-only bolt-focus-treatment" data-focuszone="focuszone-3" data-is-focusable="true" role="menuitem" tabindex="0" type="button"> 
 											<span aria-hidden="true" class="left-icon flex-noshrink fabric-icon ms-Icon--AddReaction medium"></span></button>
-											</div> -->
+											</div>
 										</div></div>
 									</div>
 									<div class="comment-content" data-comment-id="${id}">

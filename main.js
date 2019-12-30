@@ -96,9 +96,8 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
 
                         if (idsArr.length==0)
                         {
-                            appInsights.trackEvent({name: "noContent"});
-                            document.getElementById("nocontent").style.visibility="visible" ;
-                            document.getElementById("headbox").style.visibility="visible" ;
+                            updateProgress(100);
+                            showNoContentInfo();   
                             
                             //Improve: break out of promise chain. No need to continue moving forward 
                         }
@@ -241,7 +240,13 @@ function showError(msg){
     document.getElementById("errorDiv").innerHTML=msg;
 }
 
-
+function showNoContentInfo()
+{
+    document.getElementById("myProgress").style.display="none";
+    appInsights.trackEvent({name: "noContent"});
+    document.getElementById("nocontent").style.visibility="visible" ;
+    document.getElementById("headbox").style.visibility="visible" ;
+}
 
 function loadSettings(){
     return new Promise(function(resolve, reject) {
@@ -259,11 +264,7 @@ function loadSettings(){
                 console.error("Error in GetSetting5"); })
             ],
             (p) => {
-                
-                //console.log("Update "+p+ "= "+(11+p.toFixed(0)/10));
-
                 updateProgress(7+p.toFixed(0)/10);
- 
         }).then(function(data) {
             //FilterSetting
             if (data[0]==null){
