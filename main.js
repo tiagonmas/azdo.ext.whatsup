@@ -104,7 +104,6 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                         else {
                             appInsights.trackEvent({name: "Content"});
                             appInsights.trackMetric("FollowingItems",idsArr.length );
-                            document.getElementById("nocontent").style.display="none" ;
                             document.getElementById("headbox").style.visibility="visible" ;
                         }
 
@@ -124,8 +123,8 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
 
                         return idsArr;
                     },function(Err){
-                        console.error("error loading query "+Err);
-                        showError("error loading query"+Err);
+                        console.error("Error loading query: "+Err);
+                        showError("Error loading query: "+Err);
                         return null;
                     }
                     
@@ -141,40 +140,50 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                         {fetchContent(itemsArr,authHeader,HostName,projectName,filterFromDate).
                                 then(function(updates){
                                     
-                                    //Update UI with comments applying template
-                                    var commentTpl = $('script[data-template="commentTemplate"]').text().split(/\$\{(.+?)\}/g);
-                                    var fieldsTpl = $('script[data-template="fieldsTemplate"]').text().split(/\$\{(.+?)\}/g);
-                                    var contributorsTpl = $('script[data-template="contributorsTemplate"]').text().split(/\$\{(.+?)\}/g);
+                                    if (updates.length==0){
+                                        updateProgress(100);
+                                        showNoContentInfo();
 
-
-                                    try{
-                                        var contriArray=ConvertMaptoArray(contributors);
-                                        $('#contributors').append(contriArray.map(function (item) {
-                                            return contributorsTpl.map(render(item)).join('');
-                                        }));           
-                                        contriArray.sort(compareContributions);                         
-
-                                    }catch(Err){
-                                        console.error("Err:"+Err);
-                                        showError("Err:"+e);
                                     }
+                                    else
+                                    {
 
-                                    $('#list-comment-items').append(updates.map(function (item) {
-                                        var myItemhtml;
-                                        if (item.hasOwnProperty("fields") && item.countNormalFields>0){
-                                            var myfields=item.fields;
-                                            if(myfields.hasOwnProperty("System.History")){
-                                                myItemhtml=commentTpl.map(render(item)).join('');
-                                            }else {
-                                                myItemhtml=fieldsTpl.map(render(item)).join('');
-                                            }
+                                        //Update UI with comments applying template
+                                        var commentTpl = $('script[data-template="commentTemplate"]').text().split(/\$\{(.+?)\}/g);
+                                        var fieldsTpl = $('script[data-template="fieldsTemplate"]').text().split(/\$\{(.+?)\}/g);
+                                        var contributorsTpl = $('script[data-template="contributorsTemplate"]').text().split(/\$\{(.+?)\}/g);
+
+
+                                        try{
+                                            var contriArray=ConvertMaptoArray(contributors);
+                                            $('#contributors').append(contriArray.map(function (item) {
+                                                return contributorsTpl.map(render(item)).join('');
+                                            }));           
+                                            contriArray.sort(compareContributions);                         
+
+                                        }catch(Err){
+                                            console.error("Err:"+Err);
+                                            showError("Err:"+e);
                                         }
-                                        return myItemhtml;
-                                    }));
-                                
-                                    updateVisibility(document.getElementById("filterSelection").value);
-                                    document.getElementById("myProgress").style.display="none";
-                                    appInsights.stopTrackPage("Page");
+
+                                        $('#list-comment-items').append(updates.map(function (item) {
+                                            var myItemhtml;
+                                            if (item.hasOwnProperty("fields") && item.countNormalFields>0){
+                                                var myfields=item.fields;
+                                                if(myfields.hasOwnProperty("System.History")){
+                                                    myItemhtml=commentTpl.map(render(item)).join('');
+                                                }else {
+                                                    myItemhtml=fieldsTpl.map(render(item)).join('');
+                                                }
+                                            }
+                                            return myItemhtml;
+                                        }));
+                                    
+                                        updateVisibility(document.getElementById("filterSelection").value);
+                                        updateProgress(100);
+                                        appInsights.stopTrackPage("Page");
+                                        document.getElementById("nocontent").style.display="none" ;
+                                    }
                                 },function(err) {
                                     console.error("========ERROR: "+err);
                                     showError("ERROR:"+e);
@@ -235,9 +244,11 @@ function GetSetting(setting){
 
 }
 function showError(msg){
+    updateProgress(100);
     document.getElementById("headbox").style.visibility="visible";
-    document.getElementById("loader").style.visibility="hidden";
+    // document.getElementById("loader").style.visibility="hidden";
     document.getElementById("errorDiv").innerHTML=msg;
+    document.getElementById("errorDiv").style.visibility="visible";
 }
 
 function showNoContentInfo()

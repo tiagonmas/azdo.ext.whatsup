@@ -275,6 +275,10 @@ function compareTimestamp( a, b ) {
     const myBarElem = document.getElementById("myBar"); 
     myBarElem.innerHTML="Loading "+progValue + '%';
     myBarElem.style.width = progValue + '%'; 
+    if (progValue>99) 
+    {
+        document.getElementById("myProgress").style.display="none";
+    }
   }
 //Call Rest API's based on array of ID's 
 function fetchContent(_idsArr,_authHeader,_hostName,_projectName,_dateFilter)
