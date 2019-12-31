@@ -182,7 +182,7 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                                         updateVisibility(document.getElementById("filterSelection").value);
                                         updateProgress(100);
                                         appInsights.stopTrackPage("Page");
-                                        document.getElementById("nocontent").style.display="none" ;
+                                        CheckNumberOfItemsVisible();//SHows no content pane of no items are visible
                                     }
                                 },function(err) {
                                     console.error("========ERROR: "+err);
@@ -256,12 +256,14 @@ function showNoContentInfo()
     document.getElementById("myProgress").style.display="none";
     appInsights.trackEvent({name: "noContent"});
     document.getElementById("nocontent").style.visibility="visible" ;
+    document.getElementById("nocontent").style.display="block" ;
     document.getElementById("headbox").style.visibility="visible" ;
 }
 
 function loadSettings(){
     return new Promise(function(resolve, reject) {
         //Get Settings
+        var _filterSetting;
 
         allProgress([GetSetting("FilterSetting").catch(error => { 
                 console.error("Error in GetSetting1"); })
@@ -278,11 +280,14 @@ function loadSettings(){
                 updateProgress(7+p.toFixed(0)/10);
         }).then(function(data) {
             //FilterSetting
-            if (data[0]==null){
+            if (data[0]==null || data[0]==""){
                 _filterSetting="somefields";
+                SaveSetting("FilterSetting","somefields");
             }
-            console.log("FilterSetting="+data[0]);
-            filterSelection.value=data[0];
+            else {_filterSetting=data[0];}
+            console.log("FilterSetting ="+_filterSetting);
+            document.getElementById("filterSelection").value=_filterSetting;
+            
 
             //LastExecDate
             LastExecDate=data[1];
@@ -318,7 +323,6 @@ function loadSettings(){
     });
 }
 function changeDisplayByClassName(elementClass,newValue){
-    
         Array.prototype.forEach.call(document.getElementsByClassName(elementClass),element => {	
                 element.style.display = newValue;	
             });
@@ -369,9 +373,24 @@ function updateVisibility(element){
             appInsights.trackEvent({name:"FilterAll"});
             break;
     }
+    CheckNumberOfItemsVisible();
 
 }
 
+function CheckNumberOfItemsVisible()
+{
+     //Check if there are any elements still visible
+     var numVisibleItems=$(".wit-comment-item").filter(function() {
+        return $(this).css('display') !== 'none';
+    }).length;
+    if (numVisibleItems==0){
+        showNoContentInfo();
+    }
+    else {
+        document.getElementById("nocontent").style.visibility="hidden" ;
+        document.getElementById("nocontent").style.display="none" ;
+    }   
+}
 function filterByContributor_click(user){
     updateVisibility(document.getElementById("filterSelection").value);
     
