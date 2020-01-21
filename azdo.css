@@ -134,12 +134,9 @@ body {
 	border-radius:5px;
 }
 .leftcolumn { 
-	 width:70%;
-	/* padding:0px;
-    white-space:nowrap;
+	white-space:nowrap;
 	overflow-x:auto;
-	height:70px;
-	overflow-y:hidden; */
+	max-width: 6em;
 } 
 .centercolumn{ 
 
@@ -202,3 +199,6 @@ body {
 	padding-top:5px;
 }
 
+#contributors::first {
+	vertical-align: bottom;
+}
