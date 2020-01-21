@@ -199,6 +199,6 @@ body {
 	padding-top:5px;
 }
 
-#contributors::first {
+#contributors > button:first-child {
 	vertical-align: bottom;
 }
