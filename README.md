@@ -25,7 +25,7 @@ It has 2 possible modes of fetching the information. Either from all the work it
 
 1. Find a query that you want to follow (or create a new query) and add the query id to the "Query id" filed in the header of the extension
 
-> ![Query Id](docs/images/queryid.png)
+> ![Query Id](docs/images/queryId.png)
 
 2. make sure you select "Query id" as the source.
 
