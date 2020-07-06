@@ -369,14 +369,15 @@ function escapeUnicode(str) {
 //Create the URL for VSS Work Item Updates REST API
 function getUpdateRestApiUrl(organization, project, id)
 {
+    //https://docs.microsoft.com/en-us/rest/api/azure/devops/wit/updates/list
     return "https://"+organization+".visualstudio.com/"+project+"/_apis/wit/workItems/"+id+"/updates/?api-version=5.1";
 }
 
 //Create the URL for VSS WorkItem Comments REST API
-function getCommentsRestApiUrl(organization, project, id)
-{
-    return "https://"+organization+".visualstudio.com/"+project+"/_apis/wit/workItems/"+id+"/comments";
-}
+// function getCommentsRestApiUrl(organization, project, id)
+// {
+//     return "https://"+organization+".visualstudio.com/"+project+"/_apis/wit/workItems/"+id+"/comments";
+// }
 
 //Create the URL for a specific work item within an organization and project
 function getWorkItemUrl(organization, project, id)
