@@ -297,17 +297,13 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName,_dateFilter)
             //Fetch all updates from workitems with ids in the _idsArray
             var promiseArr=new Array(_idsArr.length);
             for (var i=0;i<_idsArr.length;i++){
-                promiseArr[i]=get(getUpdateRestApiUrl(hostName,projectName,_idsArr[i].id));
+                promiseArr[i]=getHttpRequest(getUpdateRestApiUrl(hostName,projectName,_idsArr[i].id));
             }
-
             
             allProgress(promiseArr,
                 (p) => {
-                    //console.log(`% Done = ${p.toFixed(2)}`);
                     updateProgress(50+Math.floor(p.toFixed(0)/2));
-     
             })
-            //Promise.all(promiseArr)
             .then(function(values) {
                 var updates=FlattenArr(values);
                 console.log("Got updates:"+updates.length);
@@ -315,7 +311,6 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName,_dateFilter)
                 copyProperties(_idsArr,updates);
                 updates.sort(compareTimestamp);
                 resolve(updates);
-                
             }).catch(error => 
                 reject(error));
         }
@@ -326,9 +321,9 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName,_dateFilter)
     });
 }
 
-
+//
 //Perform a XMLHttpRequest authenticated json call to an URL (Using VSS token)
-function get(url) {
+function getHttpRequest(url) {
     return new Promise(function(resolve, reject) {
       // Do the usual XHR stuff
       var req = new XMLHttpRequest();
