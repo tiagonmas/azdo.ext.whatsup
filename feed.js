@@ -1,5 +1,5 @@
 const SpecialFields="System.AuthorizedDate;System.RevisedDate;System.ChangedDate;System.Rev;System.ChangedBy;System.Watermark;System.AuthorizedAs;System.PersonId"
-
+const MAXPOOLITEMSRESTAPI=200; //maximum number of items returned by the Rest API. If bigger we need to pool.
 var authHeader,hostName,projectName;
 const contributors=new Map(); //hashmap to store all users that have updates
 
@@ -88,8 +88,6 @@ function copyProperties(idsArr,updates)
             if (fieldsChangedHTML.countNormalFields>0)
             {addContributor(item.revisedBy);    }
         }
-
-
     });
     
 }
@@ -200,8 +198,9 @@ function compareTimestamp( a, b ) {
       return -1;
     }
     return 0;
-  }
-  function compareContributions( a, b ) {
+}
+
+function compareContributions( a, b ) {
     if ( a.contributions < b.contributions ){
       return 1;
     }
@@ -209,9 +208,9 @@ function compareTimestamp( a, b ) {
       return -1;
     }
     return 0;
-  }
+}
 
-  function removeItemsBeforeDate(itemArr,_dateFilter){
+function removeItemsBeforeDate(itemArr,_dateFilter){
     var retArr=[];
     if (_dateFilter==null){return itemArr;}
 
@@ -235,29 +234,13 @@ function compareTimestamp( a, b ) {
             {retArr.push(element);}            
 
         }
-
-        // itemArr.forEach(element => {
-        //     if(!element.hasOwnProperty("timestamp"))
-        //     {
-        //         if(element.hasOwnProperty("fields")&& element.fields["System.ChangedDate"]!==undefined){
-        //             Object.defineProperty(element, 'timestamp', { value: toTimestamp(element.fields["System.ChangedDate"].newValue) } ); 
-        //         }
-        //         else {
-        //             Object.defineProperty(element, 'timestamp', { value: toTimestamp(element.revisedDate) } ); 
-
-        //         }
-        //     }
-
-        //     if(element.timestamp>_dateFilterTimeStamp)
-        //     {retArr.push(element);}            
-
-        // });
     }
     catch(err){console.log("err "+ err);}
     return retArr;
-  }
+}
 
-  function allProgress(proms, progress_cb) {
+//Checks all promises completed, and reports progress. Expects an array of promises
+function allProgress(proms, progress_cb) {
     let d = 0;
     progress_cb(0);
     for (const p of proms) {
@@ -267,10 +250,26 @@ function compareTimestamp( a, b ) {
       });
     }
     return Promise.all(proms);
-  }
+}
 
-  function updateProgress(progValue)
-  {
+// //Checks all promises completed, and reports progress. Expects an array of array of promises
+// function allProgressPromiseArray(proms, progress_cb) {
+//     let d = 0;
+//     progress_cb(0);
+    
+//     for (const p of proms) {
+//       p.then(()=> {    
+//         d ++;
+//         progress_cb( (d * 100) / proms.length );
+//       });
+//     }
+
+//     //https://stackoverflow.com/questions/36094865/how-to-do-promise-all-for-array-of-array-of-promises/36097982#36097982
+//     return Promise.all(proms);
+// }
+
+function updateProgress(progValue)
+{
     //console.log("updateProgress: "+progValue);
     const myBarElem = document.getElementById("myBar"); 
     myBarElem.innerHTML="Loading "+progValue + '%';
@@ -279,7 +278,8 @@ function compareTimestamp( a, b ) {
     {
         document.getElementById("myProgress").style.display="none";
     }
-  }
+}
+
 //Call Rest API's based on array of ID's 
 function fetchContent(_idsArr,_authHeader,_hostName,_projectName,_dateFilter)
 {
@@ -291,15 +291,15 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName,_dateFilter)
 
         try
         {
-
-            console.log("=========fetchContent");
-
             //Fetch all updates from workitems with ids in the _idsArray
             var promiseArr=new Array(_idsArr.length);
             for (var i=0;i<_idsArr.length;i++){
-                promiseArr[i]=getHttpRequest(getUpdateRestApiUrl(hostName,projectName,_idsArr[i].id));
+                promiseArr[i]=getPooledHttpRequest(hostName,projectName,_idsArr[i].id, _idsArr[i].rev,MAXPOOLITEMSRESTAPI);
             }
             
+            //reduce the array of arrays into an array
+            promiseArr=promiseArr.reduce(function(a, b) { return a.concat(b); }, []);
+
             allProgress(promiseArr,
                 (p) => {
                     updateProgress(50+Math.floor(p.toFixed(0)/2));
@@ -321,39 +321,53 @@ function fetchContent(_idsArr,_authHeader,_hostName,_projectName,_dateFilter)
     });
 }
 
-//
+
+//Make a call to a Rest API that might be pooled. Pool if number of items is bigger than max
+//Returns an array of promises
+function getPooledHttpRequest(hostName,projectName,workitemid,numitems,maxPooledItems) {
+    var promiseArr=new Array(Math.floor(numitems/maxPooledItems)+1);
+
+    for (var i=0 ;i<promiseArr.length; i++)
+    {
+        promiseArr[i]=getHttpRequest(getUpdateRestApiUrl(hostName,projectName,workitemid,i,maxPooledItems));
+    };
+
+    return promiseArr;
+}
+
 //Perform a XMLHttpRequest authenticated json call to an URL (Using VSS token)
 function getHttpRequest(url) {
     return new Promise(function(resolve, reject) {
-      // Do the usual XHR stuff
-      var req = new XMLHttpRequest();
-      
-      req.open('GET', url);
-      req.setRequestHeader( "Authorization", authHeader );
-      req.responseType = 'json'
-      req.onload = function() {
-        // This is called even on 404 etc
-        // so check the status
-        if (req.status == 200) {
-          // Resolve the promise with the response text
-          resolve(req.response);
-        }
-        else {
-          // Otherwise reject with the status text
-          reject(Error(req.statusText));
-        }
-      };
+        // Do the usual XHR stuff
+        var req = new XMLHttpRequest();
+        
+        req.open('GET', url);
+        req.setRequestHeader( "Authorization", authHeader );
+        req.responseType = 'json'
+        req.onload = function() {
+            // This is called even on 404 etc
+            // so check the status
+            if (req.status == 200) {
+            // Resolve the promise with the response text
+            resolve(req.response);
+            }
+            else {
+            // Otherwise reject with the status text
+            console.log("rejecting: "+url);
+            reject(Error(req.statusText));
+            }
+        };
   
-      // Handle network errors
-      req.onerror = function() {
-        reject(Error("Network Error"));
-      };
-  
-      // Make the request
-      req.send();
+        // Handle network errors
+        req.onerror = function() {
+            console.log("Network Error: "+url);
+            reject(Error("Network Error"));
+        };
+    
+        // Make the request
+        req.send();
     });
 }
-
 
 function escapeUnicode(str) {
     return str.replace(/[^\0-~]/g, function(ch) {
@@ -362,10 +376,10 @@ function escapeUnicode(str) {
 }
 
 //Create the URL for VSS Work Item Updates REST API
-function getUpdateRestApiUrl(organization, project, id)
+function getUpdateRestApiUrl(organization, project, id,poolIteration,maxPoolItems)
 {
-    //https://docs.microsoft.com/en-us/rest/api/azure/devops/wit/updates/list
-    return "https://"+organization+".visualstudio.com/"+project+"/_apis/wit/workItems/"+id+"/updates/?api-version=5.1";
+    return "https://"+organization+".visualstudio.com/"+project+"/_apis/wit/workItems/"+id+"/updates/?$top="+maxPoolItems+"&$skip="+poolIteration*maxPoolItems+"&api-version=5.1";
+    
 }
 
 //Create the URL for VSS WorkItem Comments REST API
@@ -383,7 +397,8 @@ function getWorkItemUrl(organization, project, id)
 
 
 //Return a written for of how long it passed sice a given date, if too long return just the date.
-function GetDateDiffDescriptionVsNow(_date){
+function GetDateDiffDescriptionVsNow(_date)
+{
     try
     {
     var theDate=new Date(_date);
@@ -415,6 +430,7 @@ function GetDateDiffDescriptionVsNow(_date){
         console.log("Eorror in GetDateDiffDescriptionVsNow"+Err);
     }
 }
+
 function DateDiffHours(date1, date2) {
     var datediff = date1.getTime() - date2.getTime(); //store the getTime diff - or +
     return (datediff / (60*60*1000));    

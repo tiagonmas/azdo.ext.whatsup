@@ -3,7 +3,7 @@
  	"id": "cse-follwing-feed",
  	"publisher": "TiagoAndradeeSilva",
  	"name": "What's Up?",
- 	"description": "Recent updates from the work items you follow",
+ 	"description": "Recent updates from the work items that matter to you",
 	"scopes": [ "vso.work"],
 	 "categories": ["Azure Repos"],
 	 "icons": {
@@ -18,7 +18,7 @@
  		{
  			"id": "cse-follwing-feed-hub",
  			"type": "ms.vss-web.hub",
-			"description": "Recent updates from the work items you follow",
+			"description": "Recent updates from the work items that matter to you",
  			"targets": [
  				"ms.vss-work-web.work-hub-group"
  			],

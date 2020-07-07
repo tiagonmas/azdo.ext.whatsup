@@ -41,7 +41,7 @@ VSS.require(["VSS/Service", "TFS/WorkItemTracking/RestClient","VSS/Authenticatio
                 
                 VSS.notifyLoadSucceeded();
 
-                updateProgress(5);
+                updateProgress(4);
                 loadSettings().then(function(){
 
                 

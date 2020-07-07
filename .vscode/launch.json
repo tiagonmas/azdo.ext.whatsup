@@ -7,8 +7,13 @@
             "request": "launch",
             "reAttach": true,
             "url": "https://localhost:44300/index.html",
-            "webRoot": "${workspaceFolder}"
-            
+            "webRoot": "${workspaceFolder}",
+            "pathMappings": [
+                {
+                    "url": "https://localhost:44300",
+                    "path": "${workspaceFolder}"
+                }
+            ]
         }
     ]
 }
