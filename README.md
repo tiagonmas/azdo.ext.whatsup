@@ -78,6 +78,8 @@ You can check your tokens following the link 'https://dev.azure.com/username/_us
 tfx extension publish --manifest-globs vss-extension.json --overrides-file configs/dev.json --token <yourtoken>
 ```
 
+> ![Debug](docs/images/publish.png)
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
