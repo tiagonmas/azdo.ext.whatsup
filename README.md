@@ -66,6 +66,10 @@ A step by step series of examples that tell you how to get a development env run
 
 ## Deployment / Publishing
 
+You might need to install Visual Studio Services Web Extension SDK before publishing (or you might get the error "error: Error: ENOENT: no such file or directory, lstat '... \azdo.ext.whatsup\node_modules\vss-web-extension-sdk\lib'"):
+```
+npm install vss-web-extension-sdk
+```
 To [publish the extension from the command line](https://docs.microsoft.com/en-us/azure/devops/extend/publish/command-line?view=azure-devops)
 
 You can check your tokens following the link 'https://dev.azure.com/username/_usersSettings/tokens' (replace username with yours)
